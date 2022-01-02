@@ -5,7 +5,7 @@
 	</div>
 
 	<x-slot name="modals">
-        <x-tables::modal id="backup-option" width="md">
+        <x-tables::modal id="backup-option" width="lg">
             <x-slot name="subheading">
                 <h3 class="text-xl">{{ __('filament-spatie-backup::backup.pages.backups.modal.label') }}</h3>
             </x-slot>
