@@ -29,7 +29,7 @@ class Backups extends Page
 
     protected static function getNavigationSort(): ?int
     {
-        return config('filament-spatie-laravel-backup.resource.navigation.sort') ?? parent::getNavigationSort();
+        return config('filament-spatie-laravel-backup.page.navigation.sort') ?? parent::getNavigationSort();
     }
 
     protected function getActions(): array
