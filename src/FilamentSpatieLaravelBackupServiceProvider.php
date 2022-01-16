@@ -34,6 +34,10 @@ class FilamentSpatieLaravelBackupServiceProvider extends PluginServiceProvider
 
     protected function getPages(): array
     {
+        if (config('filament-spatie-laravel-backup.page.override')) {
+            return [];
+        }
+
         return [
             Backups::class,
         ];
