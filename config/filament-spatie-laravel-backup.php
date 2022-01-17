@@ -4,7 +4,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Page
+    | Pages
     |--------------------------------------------------------------------------
     |
     | This is the configuration for the general appearance of the page
@@ -12,10 +12,8 @@ return [
     |
     */
 
-    'page' => [
-        'navigation' => [
-            'sort' => null,
-        ],
+    'pages' => [
+        'backups' => \ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups::class
     ],
 
     /*

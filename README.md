@@ -31,7 +31,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Page
+    | Pages
     |--------------------------------------------------------------------------
     |
     | This is the configuration for the general appearance of the page
@@ -39,10 +39,8 @@ return [
     |
     */
 
-    'page' => [
-        'navigation' => [
-            'sort' => null,
-        ],
+    'pages' => [
+        'backups' => \ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups::class
     ],
 
     /*
@@ -76,10 +74,6 @@ return [
 ## Usage
 
 This package will automatically register the `Backups`. You'll be able to see it when you visit your Filament admin panel.
-
-## Customising the navigation sorting
-
-You can customise the navigation sort for the `Backups` by publishing the configuration file and updating the `page.navigation.sort` value.
 
 ## Customising the polling interval
 

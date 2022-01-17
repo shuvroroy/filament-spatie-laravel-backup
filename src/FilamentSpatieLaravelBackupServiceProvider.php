@@ -34,9 +34,7 @@ class FilamentSpatieLaravelBackupServiceProvider extends PluginServiceProvider
 
     protected function getPages(): array
     {
-        return [
-            Backups::class,
-        ];
+        return config('filament-spatie-laravel-backup.pages');
     }
 
     protected function getStyles(): array
