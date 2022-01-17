@@ -6,7 +6,6 @@ use Filament\PluginServiceProvider;
 use Livewire\Livewire;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationListRecords;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationStatusListRecords;
-use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups;
 use Spatie\LaravelPackageTools\Package;
 
 class FilamentSpatieLaravelBackupServiceProvider extends PluginServiceProvider
