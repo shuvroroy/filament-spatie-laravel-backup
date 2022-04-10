@@ -2,6 +2,18 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v1.2.1 - 2022-04-10
+
+## What's Changed
+
+- Added Spanish translations by @pathros in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/13
+
+## New Contributors
+
+- @pathros made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/13
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v1.2.0...v1.2.1
+
 ## v1.2.0 - 2022-02-11
 
 ## What's Changed
