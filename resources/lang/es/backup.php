@@ -28,7 +28,7 @@ return [
 				'fields' => [
 					'name'         => 'Nombre',
 					'disk'         => 'Disco',
-                                        'healthy'      => 'Estado',
+                    'healthy'      => 'Estado',
 					'amount'       => 'Cantidad',
 					'newest'       => 'Más reciente',
 					'used_storage' => 'Espacio utilizado',
