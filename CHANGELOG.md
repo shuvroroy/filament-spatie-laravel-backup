@@ -2,6 +2,12 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v1.2.2 - 2022-06-02
+
+### What's Changed
+
+- Fix Open modal open issue
+
 ## v1.2.1 - 2022-04-10
 
 ## What's Changed
