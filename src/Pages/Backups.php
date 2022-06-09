@@ -51,4 +51,14 @@ class Backups extends Page
 
         $this->notify('success', __('filament-spatie-backup::backup.pages.backups.messages.backup_success'));
     }
+
+    protected static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->can('view_backups');
+    }
+
+    public function mount(): void
+    {
+        abort_unless(auth()->user()->can('view_backups'), 403);
+    }
 }
