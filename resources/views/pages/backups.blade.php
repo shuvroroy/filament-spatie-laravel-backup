@@ -14,14 +14,6 @@
                 <x-filament::button wire:click="create('only-db')" color="primary">
                     {{ __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_db') }}
                 </x-filament::button>
-
-                <x-filament::button wire:click="create('only-files')" color="warning">
-                    {{ __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_files') }}
-                </x-filament::button>
-
-                <x-filament::button wire:click="create()" color="success">
-                    {{ __('filament-spatie-backup::backup.pages.backups.modal.buttons.db_and_files') }}
-                </x-filament::button>
             </x-filament::modal.actions>
         </x-slot>
     </x-tables::modal>
