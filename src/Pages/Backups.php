@@ -2,7 +2,7 @@
 
 namespace ShuvroRoy\FilamentSpatieLaravelBackup\Pages;
 
-use Filament\Pages\Actions\ButtonAction;
+use Filament\Pages\Actions;
 use Filament\Pages\Page;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Jobs\CreateBackupJob;
 
@@ -30,7 +30,8 @@ class Backups extends Page
     protected function getActions(): array
     {
         return [
-            ButtonAction::make('Create Backup')
+            Actions\Action::make('Create Backup')
+                ->button()
                 ->label(__('filament-spatie-backup::backup.pages.backups.actions.create_backup'))
                 ->action('openOptionModal'),
         ];

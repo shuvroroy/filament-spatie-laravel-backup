@@ -56,10 +56,12 @@ class BackupDestinationListRecords extends Component implements Tables\Contracts
     protected function getTableActions(): array
     {
         return [
-            Tables\Actions\LinkAction::make('download')
+            Tables\Actions\Action::make('download')
+                ->link()
                 ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.download'))
                 ->action('download'),
-            Tables\Actions\LinkAction::make('delete')
+            Tables\Actions\Action::make('delete')
+                ->link()
                 ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.delete'))
                 ->action('delete')
                 ->requiresConfirmation(),
