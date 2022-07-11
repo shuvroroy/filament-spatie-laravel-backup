@@ -5,12 +5,13 @@ namespace ShuvroRoy\FilamentSpatieLaravelBackup\Components;
 use Filament\Tables;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackup;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Models\BackupDestination;
 use Spatie\Backup\BackupDestination\Backup;
 use Spatie\Backup\BackupDestination\BackupDestination as SpatieBackupDestination;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class BackupDestinationListRecords extends Component implements Tables\Contracts\HasTable
 {
@@ -75,9 +76,9 @@ class BackupDestinationListRecords extends Component implements Tables\Contracts
         ];
     }
 
-    public function download(BackupDestination $record): BinaryFileResponse
+    public function download(BackupDestination $record): Response
     {
-        return response()->download(storage_path("app/{$record->path}"));
+        return Storage::disk($record->disk)->download($record->path);
     }
 
     public function delete(BackupDestination $record): void
