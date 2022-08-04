@@ -46,7 +46,7 @@ return [
 			'heading' => 'Yedekler',
 
 			'messages' => [
-				'backup_success' => 'Arka planda yedi bir yedek oluşturuluyor.'
+				'backup_success' => 'Arka planda yeni bir yedek oluşturuluyor.'
 			],
 
 			'modal' => [
