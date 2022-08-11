@@ -2,6 +2,21 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v1.2.5 - 2022-08-11
+
+### What's Changed
+
+- tr typo fix word by @necmicolak in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/26
+- Vietnamese translations by @datlechin in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/27
+- chore(deps): bump actions/checkout from 2 to 3 by @dependabot in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/11
+
+### New Contributors
+
+- @necmicolak made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/26
+- @datlechin made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/27
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v1.2.4...v1.2.5
+
 ## v1.2.4 - 2022-07-19
 
 ### What's Changed
