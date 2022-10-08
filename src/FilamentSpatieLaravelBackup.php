@@ -3,6 +3,8 @@
 namespace ShuvroRoy\FilamentSpatieLaravelBackup;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Config;
 use Spatie\Backup\BackupDestination\Backup;
 use Spatie\Backup\BackupDestination\BackupDestination;
 use Spatie\Backup\Helpers\Format;
@@ -36,8 +38,8 @@ class FilamentSpatieLaravelBackup
 
     public static function getBackupDestinationData(string $disk): array
     {
-        return Cache::remember('backups-'. $disk, now()->addSeconds(4), function () use ($disk) {
-            return BackupDestination::create($disk, config('backup.backup.name'))
+        return Cache::remember('backups-' . $disk, now()->addSeconds(4), function () use ($disk) {
+            return BackupDestination::create($disk, self::backupName())
                 ->backups()
                 ->map(function (Backup $backup) use ($disk) {
                     $size = method_exists($backup, 'sizeInBytes') ? $backup->sizeInBytes() : $backup->size();
@@ -53,10 +55,15 @@ class FilamentSpatieLaravelBackup
         });
     }
 
+    private static function backupName(): string
+    {
+        return self::isTenant() ? self::getNameBackupForTenant() : config('backup.backup.name');
+    }
+
     public static function getBackupDestinationStatusData(): array
     {
         return Cache::remember('backup-statuses', now()->addSeconds(4), function () {
-            return BackupDestinationStatusFactory::createForMonitorConfig(config('backup.monitor_backups'))
+            return BackupDestinationStatusFactory::createForMonitorConfig(self::monitorBackupsConfig())
                 ->map(function (BackupDestinationStatus $backupDestinationStatus, int | string $key) {
                     return [
                         'id' => $key,
@@ -74,5 +81,30 @@ class FilamentSpatieLaravelBackup
                 ->values()
                 ->toArray();
         });
+    }
+
+    private static function monitorBackupsConfig(): array
+    {
+        $monitorBackups = config('backup.monitor_backups');
+        return !self::isTenant() ? $monitorBackups : collect($monitorBackups)->map(function ($data) {
+            $data['name'] = self::getNameBackupForTenant();
+            return $data;
+        })->all();
+    }
+
+    private static function getConfigTenant(): object
+    {
+        return (object)config('filament-spatie-laravel-backup.tenant');
+    }
+
+    private static function isTenant(): bool
+    {
+        return (self::getConfigTenant()->active) && (function_exists('tenant') && tenant());
+    }
+
+    private static function getNameBackupForTenant(): string
+    {
+        $key = self::getConfigTenant()->key;
+        return Str::ucfirst(tenant()->$key);
     }
 }

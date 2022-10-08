@@ -41,4 +41,21 @@ return [
 
     'queue' => null,
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tenant
+    |--------------------------------------------------------------------------
+    |
+    |For multi-tenant sites, which has multiple database. functionality only for stancl/tenancy package
+    |
+    */
+
+    'tenant' => [
+        // set if site has multiple tenants
+        'active' => false,
+        // set the name, of the tenant backup folder
+        'key' => 'id'
+    ],
+
 ];
