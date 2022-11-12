@@ -71,6 +71,12 @@ return [
 ];
 ```
 
+You can publish the lang file with:
+
+```bash
+php artisan vendor:publish --tag="filament-spatie-backup-translations"
+```
+
 ## Usage
 
 This package will automatically register the `Backups`. You'll be able to see it when you visit your Filament admin panel.
