@@ -2,6 +2,20 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v1.2.6 - 2022-11-16
+
+### What's Changed
+
+- chore(deps): bump dependabot/fetch-metadata from 1.3.3 to 1.3.4 by @dependabot in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/31
+- chore(deps): bump dependabot/fetch-metadata from 1.3.4 to 1.3.5 by @dependabot in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/34
+- Added translation to Russian. by @den1n in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/35
+
+### New Contributors
+
+- @den1n made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/35
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v1.2.5...v1.2.6
+
 ## v1.2.5 - 2022-08-11
 
 ### What's Changed
