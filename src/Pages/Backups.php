@@ -54,11 +54,11 @@ class Backups extends Page
 
     protected static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()->can('view_backups');
+        return auth()->user()->can('page_Backups');
     }
 
     public function mount(): void
     {
-        abort_unless(auth()->user()->can('view_backups'), 403);
+        abort_unless(auth()->user()->can('page_Backups'), 403);
     }
 }
