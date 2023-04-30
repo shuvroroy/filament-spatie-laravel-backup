@@ -56,12 +56,12 @@ class Backups extends Page
         $this->notify('success', __('filament-spatie-backup::backup.pages.backups.messages.backup_success'));
     }
 
-    public function hideBackupStatusTable(bool $condition = true) :void
+    public function hideBackupStatusTable(bool $condition = true): void
     {
-       $this->hideBackupStatusTable = $condition;
+        $this->hideBackupStatusTable = $condition;
     }
 
-    public function getHideBackupStatusTable() : bool
+    public function getHideBackupStatusTable(): bool
     {
         return $this->hideBackupStatusTable;
     }
