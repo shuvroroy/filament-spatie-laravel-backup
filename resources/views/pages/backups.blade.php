@@ -1,5 +1,5 @@
 <x-filament::page>
-    @if(!$this->getHideBackupStatusTable())
+    @if($this->shouldDisplayStatusListRecords())
         @livewire(ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationStatusListRecords::class)
     @endif
     <div class="!mt-8">
