@@ -2,6 +2,21 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v1.3.0 - 2023-04-30
+
+### What's Changed
+
+- chore(deps): bump ramsey/composer-install from 1 to 2 by @dependabot in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/36
+- chore(deps): bump dependabot/fetch-metadata from 1.3.5 to 1.3.6 by @dependabot in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/40
+- chore(deps): bump dependabot/fetch-metadata from 1.3.6 to 1.4.0 by @dependabot in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/41
+- feat: add a right to create, download and delete backup by @vincent-tarrit in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/42
+
+### New Contributors
+
+- @vincent-tarrit made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/42
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v1.2.6...v1.3.0
+
 ## v1.2.6 - 2022-11-16
 
 ### What's Changed
