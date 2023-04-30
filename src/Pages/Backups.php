@@ -12,6 +12,8 @@ class Backups extends Page
 
     protected static string $view = 'filament-spatie-backup::pages.backups';
 
+    private bool $hideBackupStatusTable = false;
+
     protected function getHeading(): string
     {
         return __('filament-spatie-backup::backup.pages.backups.heading');
@@ -33,7 +35,8 @@ class Backups extends Page
             Actions\Action::make('Create Backup')
                 ->button()
                 ->label(__('filament-spatie-backup::backup.pages.backups.actions.create_backup'))
-                ->action('openOptionModal'),
+                ->action('openOptionModal')
+                ->visible(auth()->user()->can('create-backup')),
         ];
     }
 
@@ -51,5 +54,15 @@ class Backups extends Page
         $this->dispatchBrowserEvent('close-modal', ['id' => 'backup-option']);
 
         $this->notify('success', __('filament-spatie-backup::backup.pages.backups.messages.backup_success'));
+    }
+
+    public function hideBackupStatusTable(bool $condition = true) :void
+    {
+       $this->hideBackupStatusTable = $condition;
+    }
+
+    public function getHideBackupStatusTable() : bool
+    {
+        return $this->hideBackupStatusTable;
     }
 }

@@ -1,8 +1,10 @@
 <x-filament::page>
-	@livewire(ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationStatusListRecords::class)
-	<div class="!mt-8">
-		@livewire(ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationListRecords::class)
-	</div>
+    @if(!$this->getHideBackupStatusTable())
+        @livewire(ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationStatusListRecords::class)
+    @endif
+    <div class="!mt-8">
+        @livewire(ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationListRecords::class)
+    </div>
 
     <x-tables::modal id="backup-option" width="lg">
         <x-slot name="subheading">
