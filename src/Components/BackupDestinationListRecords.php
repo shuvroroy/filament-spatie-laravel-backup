@@ -60,11 +60,14 @@ class BackupDestinationListRecords extends Component implements Tables\Contracts
             Tables\Actions\Action::make('download')
                 ->link()
                 ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.download'))
-                ->action('download'),
+                ->action('download')
+                ->visible(auth()->user()->can('download-backup')),
+
             Tables\Actions\Action::make('delete')
                 ->link()
                 ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.delete'))
                 ->action('delete')
+                ->visible(auth()->user()->can('delete-backup'))
                 ->requiresConfirmation(),
         ];
     }
