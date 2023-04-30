@@ -2,6 +2,14 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v1.3.1 - 2023-04-30
+
+### What's Changed
+
+- fix: display status by overriding the function by @vincent-tarrit in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/43
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v1.3.0...v1.3.1
+
 ## v1.3.0 - 2023-04-30
 
 ### What's Changed
