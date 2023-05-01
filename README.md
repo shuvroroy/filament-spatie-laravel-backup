@@ -1,14 +1,17 @@
 # Filament Spatie Laravel Backup
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/shuvroroy/filament-spatie-laravel-backup.svg?style=flat-square)](https://packagist.org/packages/shuvroroy/filament-spatie-laravel-backup)
-[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/shuvroroy/filament-spatie-laravel-backup/run-tests?label=tests)](https://github.com/shuvroroy/filament-spatie-laravel-backup/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/shuvroroy/filament-spatie-laravel-backup/Check%20&%20fix%20styling?label=code%20style)](https://github.com/shuvroroy/filament-spatie-laravel-backup/actions?query=workflow%3A"Check+%26+fix+styling"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/shuvroroy/filament-spatie-laravel-backup.svg?style=flat-square)](https://packagist.org/packages/shuvroroy/filament-spatie-laravel-backup)
+[![PHP Version Require](http://poser.pugx.org/shuvroroy/filament-spatie-laravel-backup/require/php)](https://packagist.org/packages/shuvroroy/filament-spatie-laravel-backup)
+<a href="https://github.com/shuvroroy/filament-spatie-laravel-backup/actions"><img src="https://github.com/shuvroroy/filament-spatie-laravel-backup/workflows/run-tests/badge.svg" alt="Build Status"></a>
+[![Latest Stable Version](http://poser.pugx.org/shuvroroy/filament-spatie-laravel-backup/v)](https://packagist.org/packages/shuvroroy/filament-spatie-laravel-backup)
+[![Total Downloads](http://poser.pugx.org/shuvroroy/filament-spatie-laravel-backup/downloads)](https://packagist.org/packages/shuvroroy/filament-spatie-laravel-backup)
+[![License](http://poser.pugx.org/shuvroroy/filament-spatie-laravel-backup/license)](https://packagist.org/packages/shuvroroy/filament-spatie-laravel-backup)
 
 This package provides a Filament page that you can create backup of your application. You'll find installation instructions and full documentation on [spatie/laravel-backup](https://spatie.be/docs/laravel-backup/v7/introduction).
 
 ![Backups - Filament Demo](https://user-images.githubusercontent.com/21066418/147877751-faf7f541-3a47-4699-bf5e-2e87990d3bfe.png)
 
+## Support For This Project
+[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-Donate-yellow?style=for-the-badge&logo=buymeacoffee)](https://www.buymeacoffee.com/shuvroroy)
 
 ## Installation
 
