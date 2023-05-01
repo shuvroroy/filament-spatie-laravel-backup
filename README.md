@@ -11,7 +11,8 @@ This package provides a Filament page that you can create backup of your applica
 ![Backups - Filament Demo](https://user-images.githubusercontent.com/21066418/147877751-faf7f541-3a47-4699-bf5e-2e87990d3bfe.png)
 
 ## Support For This Project
-[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-Donate-yellow?style=for-the-badge&logo=buymeacoffee)](https://www.buymeacoffee.com/shuvroroy)
+
+<a href="https://www.buymeacoffee.com/shuvroroy" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
 ## Installation
 
