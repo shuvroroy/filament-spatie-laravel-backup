@@ -41,4 +41,15 @@ return [
 
     'queue' => null,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Permission
+    |--------------------------------------------------------------------------
+    |
+    | This is the configuration for backup access permission, leaving null all have access or enter a permission.
+    |
+    */
+
+    'permission' => null,
+
 ];

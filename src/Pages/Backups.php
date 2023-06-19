@@ -60,4 +60,14 @@ class Backups extends Page
     {
         return true;
     }
+
+    protected static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->can(config('filament-spatie-laravel-backup.permission'));
+    }
+
+    public function mount(): void
+    {
+        abort_unless(auth()->user()->can(config('filament-spatie-laravel-backup.permission')), 403);
+    }
 }
