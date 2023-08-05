@@ -22,57 +22,10 @@ You can install the package via composer:
 composer require shuvroroy/filament-spatie-laravel-backup
 ```
 
-You can publish the config file with:
+Publish the package's assets:
 
 ```bash
-php artisan vendor:publish --tag="filament-spatie-backup-config"
-```
-
-This is the contents of the published config file:
-
-```php
-return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Pages
-    |--------------------------------------------------------------------------
-    |
-    | This is the configuration for the general appearance of the page
-    | in admin panel.
-    |
-    */
-
-    'pages' => [
-        'backups' => \ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups::class
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Polling
-    |--------------------------------------------------------------------------
-    |
-    | This is the configuration for the interval seconds between
-    | polling requests.
-    |
-    */
-
-    'polling' => [
-        'interval' => '4s'
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Queue
-    |--------------------------------------------------------------------------
-    |
-    | Queue to use for the jobs to run through.
-    |
-    */
-
-    'queue' => null,
-
-];
+php artisan filament:assets
 ```
 
 You can publish the lang file with:
@@ -83,21 +36,141 @@ php artisan vendor:publish --tag="filament-spatie-backup-translations"
 
 ## Usage
 
-This package will automatically register the `Backups`. You'll be able to see it when you visit your Filament admin panel.
+You first need to register the plugin with Filament. This can be done inside of your `PanelProvider`, e.g. `AdminPanelProvider`.
+
+```php
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Panel;
+use Filament\PanelProvider;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            // ...
+            ->plugin(FilamentSpatieLaravelBackupPlugin::make());
+    }
+}
+```
+
+If you want to override the default `HealthCheckResults` page icon, heading then you can extend the page class and override the `navigationIcon` property and `getHeading` method and so on.
+
+```php
+<?php
+
+namespace App\Filament\Pages;
+
+use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups as BaseBackups;
+
+class Backups extends BaseHealthCheckResults
+{
+    protected static ?string $navigationIcon = 'heroicon-o-cpu-chip';
+
+    public function getHeading(): string | Htmlable
+    {
+        return 'Application Backups';
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Core';
+    }
+}
+```
+Then register the extended page class on `AdminPanelProvider` class.
+
+```php
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Panel;
+use Filament\PanelProvider;
+use App\Filament\Pages\Backups;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            // ...
+            ->plugin(
+                FilamentSpatieLaravelBackupPlugin::make()
+                    ->usingPage(Backups::class)
+            );
+    }
+}
+```
 
 ## Customising the polling interval
 
-You can customise the polling interval for the `Backups` by publishing the configuration file and updating the `polling.interval` value.
+You can customise the polling interval for the `Backups` by following the steps below:
+
+```php
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Panel;
+use Filament\PanelProvider;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            // ...
+            ->plugin(
+                FilamentSpatieLaravelBackupPlugin::make()
+                    ->usingPolingInterval('10s') // default value is 4s
+            );
+    }
+}
+```
 
 ## Customising the queue
 
-You can customise the queue name for the `Backups` by publishing the configuration file and updating the `queue` value.
+You can customise the queue name for the `Backups` by following the steps below:
+
+```php
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Panel;
+use Filament\PanelProvider;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            // ...
+            ->plugin(
+                FilamentSpatieLaravelBackupPlugin::make()
+                    ->usingQueue('my-queue') // default value is null
+            );
+    }
+}
+```
 
 ## Testing
 
 ```bash
 composer test
 ```
+
+## Upgrading
+
+Please see [UPGRADING](UPGRADING.md) for details on how to upgrade 1.X to 2.0.
 
 ## Changelog
 
