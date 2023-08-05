@@ -2,6 +2,14 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v2.0.0 - 2023-08-05
+
+### What's Changed
+
+- Support v3 🎸  by @shuvroroy in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/51
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v1.3.1...v2.0.0
+
 ## v1.3.1 - 2023-04-30
 
 ### What's Changed
