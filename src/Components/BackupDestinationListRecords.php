@@ -2,21 +2,31 @@
 
 namespace ShuvroRoy\FilamentSpatieLaravelBackup\Components;
 
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
 use Filament\Tables;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackup;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Models\BackupDestination;
 use Spatie\Backup\BackupDestination\Backup;
 use Spatie\Backup\BackupDestination\BackupDestination as SpatieBackupDestination;
-use Symfony\Component\HttpFoundation\Response;
 
-class BackupDestinationListRecords extends Component implements Tables\Contracts\HasTable
+class BackupDestinationListRecords extends Component implements HasForms, HasTable
 {
-    use Tables\Concerns\InteractsWithTable;
+    use InteractsWithTable;
+    use InteractsWithForms;
 
+    /**
+     * @var array<int|string, array<string, string>|string>
+     */
     protected $queryString = [
         'tableSortColumn',
         'tableSortDirection',
@@ -28,71 +38,70 @@ class BackupDestinationListRecords extends Component implements Tables\Contracts
         return view('filament-spatie-backup::components.backup-destination-list-records');
     }
 
-    protected function getTableQuery(): Builder
+    public function table(Table $table): Table
     {
-        return BackupDestination::query();
+        return $table
+            ->query(BackupDestination::query())
+            ->columns([
+                Tables\Columns\TextColumn::make('path')
+                    ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.fields.path'))
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('disk')
+                    ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.fields.disk'))
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('date')
+                    ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.fields.date'))
+                    ->dateTime()
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('size')
+                    ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.fields.size'))
+                    ->badge(),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('disk')
+                    ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.filters.disk'))
+                    ->options(FilamentSpatieLaravelBackup::getFilterDisks()),
+            ])
+            ->actions([
+                Tables\Actions\Action::make('download')
+                    ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.download'))
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->visible(auth()->user()->can('download-backup'))
+                    ->action(fn (BackupDestination $record) => Storage::disk($record->disk)->download($record->path)),
+
+                Tables\Actions\Action::make('delete')
+                    ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.delete'))
+                    ->icon('heroicon-o-trash')
+                    ->visible(auth()->user()->can('delete-backup'))
+                    ->requiresConfirmation()
+                    ->action(function (BackupDestination $record) {
+                        SpatieBackupDestination::create($record->disk, config('backup.backup.name'))
+                            ->backups()
+                            ->first(function (Backup $backup) use ($record) {
+                                return $backup->path() === $record->path;
+                            })
+                            ->delete();
+
+                        Notification::make()
+                            ->title(__('filament-spatie-backup::backup.pages.backups.messages.backup_delete_success'))
+                            ->success()
+                            ->send();
+                    }),
+            ])
+            ->bulkActions([
+                // ...
+            ]);
     }
 
-    protected function getTableColumns(): array
+    #[Computed]
+    public function interval(): string
     {
-        return [
-            Tables\Columns\TextColumn::make('path')
-                ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.fields.path'))
-                ->searchable()
-                ->sortable(),
-            Tables\Columns\TextColumn::make('disk')
-                ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.fields.disk'))
-                ->searchable()
-                ->sortable(),
-            Tables\Columns\TextColumn::make('date')
-                ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.fields.date'))
-                ->dateTime()
-                ->searchable()
-                ->sortable(),
-            Tables\Columns\BadgeColumn::make('size')
-                ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.fields.size')),
-        ];
-    }
+        /** @var FilamentSpatieLaravelBackupPlugin $plugin */
+        $plugin = filament()->getPlugin('filament-spatie-backup');
 
-    protected function getTableActions(): array
-    {
-        return [
-            Tables\Actions\Action::make('download')
-                ->link()
-                ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.download'))
-                ->action('download')
-                ->visible(auth()->user()->can('download-backup')),
-
-            Tables\Actions\Action::make('delete')
-                ->link()
-                ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.delete'))
-                ->action('delete')
-                ->visible(auth()->user()->can('delete-backup'))
-                ->requiresConfirmation(),
-        ];
-    }
-
-    protected function getTableFilters(): array
-    {
-        return [
-            Tables\Filters\SelectFilter::make('disk')
-                ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.filters.disk'))
-                ->options(FilamentSpatieLaravelBackup::getFilterDisks()),
-        ];
-    }
-
-    public function download(BackupDestination $record): Response
-    {
-        return Storage::disk($record->disk)->download($record->path);
-    }
-
-    public function delete(BackupDestination $record): void
-    {
-        SpatieBackupDestination::create($record->disk, config('backup.backup.name'))
-            ->backups()
-            ->first(function (Backup $backup) use ($record) {
-                return $backup->path() === $record->path;
-            })
-            ->delete();
+        return $plugin->getPolingInterval();
     }
 }

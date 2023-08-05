@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackup;
 use Sushi\Sushi;
 
+/**
+ * @property string $path
+ * @property string $disk
+ */
 class BackupDestination extends Model
 {
     use Sushi;

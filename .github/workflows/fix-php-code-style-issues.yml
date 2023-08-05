@@ -1,9 +1,15 @@
-name: Check & fix styling
+name: Fix PHP code style issues
 
-on: [push]
+on:
+  push:
+    paths:
+      - '**.php'
+
+permissions:
+  contents: write
 
 jobs:
-  php-cs-fixer:
+  php-code-styling:
     runs-on: ubuntu-latest
 
     steps:
@@ -12,12 +18,10 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
 
-      - name: Run PHP CS Fixer
-        uses: docker://oskarstark/php-cs-fixer-ga
-        with:
-          args: --config=.php_cs.dist.php --allow-risky=yes
+      - name: Fix PHP code style issues
+        uses: aglipanci/laravel-pint-action@2.2.0
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: Fix styling
+          commit_message: chore: fix styling

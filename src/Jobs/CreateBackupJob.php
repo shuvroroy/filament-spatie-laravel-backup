@@ -21,7 +21,7 @@ class CreateBackupJob implements ShouldQueue
         $this->option = $option;
     }
 
-    public function handle()
+    public function handle(): void
     {
         $backupJob = BackupJobFactory::createFromArray(config('backup'));
 
@@ -34,9 +34,9 @@ class CreateBackupJob implements ShouldQueue
         }
 
         if (! empty($this->option)) {
-            $prefix = str_replace('_', '-', $this->option).'-';
+            $prefix = str_replace('_', '-', $this->option) . '-';
 
-            $backupJob->setFilename($prefix.date('Y-m-d-H-i-s').'.zip');
+            $backupJob->setFilename($prefix . date('Y-m-d-H-i-s') . '.zip');
         }
 
         $backupJob->run();

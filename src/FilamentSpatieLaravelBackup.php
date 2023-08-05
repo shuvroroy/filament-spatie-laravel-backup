@@ -36,17 +36,15 @@ class FilamentSpatieLaravelBackup
 
     public static function getBackupDestinationData(string $disk): array
     {
-        return Cache::remember('backups-'. $disk, now()->addSeconds(4), function () use ($disk) {
+        return Cache::remember('backups-' . $disk, now()->addSeconds(4), function () use ($disk) {
             return BackupDestination::create($disk, config('backup.backup.name'))
                 ->backups()
                 ->map(function (Backup $backup) use ($disk) {
-                    $size = method_exists($backup, 'sizeInBytes') ? $backup->sizeInBytes() : $backup->size();
-
                     return [
                         'disk' => $disk,
                         'path' => $backup->path(),
                         'date' => $backup->date()->format('Y-m-d H:i:s'),
-                        'size' => Format::humanReadableSize($size),
+                        'size' => Format::humanReadableSize($backup->sizeInBytes()),
                     ];
                 })
                 ->toArray();
