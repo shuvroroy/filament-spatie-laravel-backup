@@ -2,29 +2,30 @@
 
 namespace ShuvroRoy\FilamentSpatieLaravelBackup\Pages;
 
-use Filament\Pages\Actions;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Contracts\Support\Htmlable;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Jobs\CreateBackupJob;
 
 class Backups extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-support';
+    protected static ?string $navigationIcon = 'heroicon-o-cog';
 
     protected static string $view = 'filament-spatie-backup::pages.backups';
 
-    private bool $hideBackupStatusTable = false;
-
-    protected function getHeading(): string
+    public function getHeading(): string | Htmlable
     {
         return __('filament-spatie-backup::backup.pages.backups.heading');
     }
 
-    protected static function getNavigationGroup(): ?string
+    public static function getNavigationGroup(): ?string
     {
         return __('filament-spatie-backup::backup.pages.backups.navigation.group');
     }
 
-    protected static function getNavigationLabel(): string
+    public static function getNavigationLabel(): string
     {
         return __('filament-spatie-backup::backup.pages.backups.navigation.label');
     }
@@ -32,32 +33,40 @@ class Backups extends Page
     protected function getActions(): array
     {
         return [
-            Actions\Action::make('Create Backup')
+            Action::make('Create Backup')
                 ->button()
                 ->label(__('filament-spatie-backup::backup.pages.backups.actions.create_backup'))
-                ->action('openOptionModal')
-                ->visible(auth()->user()->can('create-backup')),
+                ->action('openOptionModal'),
         ];
     }
 
     public function openOptionModal(): void
     {
-        $this->dispatchBrowserEvent('open-modal', ['id' => 'backup-option']);
+        $this->dispatch('open-modal', id: 'backup-option');
     }
 
     public function create(string $option = ''): void
     {
+        /** @var FilamentSpatieLaravelBackupPlugin $plugin */
+        $plugin = filament()->getPlugin('filament-spatie-backup');
+
         dispatch(new CreateBackupJob($option))
-            ->onQueue(config('filament-spatie-laravel-backup.queue'))
+            ->onQueue($plugin->getQueue())
             ->afterResponse();
 
-        $this->dispatchBrowserEvent('close-modal', ['id' => 'backup-option']);
+        $this->dispatch('close-modal', id: 'backup-option');
 
-        $this->notify('success', __('filament-spatie-backup::backup.pages.backups.messages.backup_success'));
+        Notification::make()
+            ->title(__('filament-spatie-backup::backup.pages.backups.messages.backup_success'))
+            ->success()
+            ->send();
     }
 
     public function shouldDisplayStatusListRecords(): bool
     {
-        return true;
+        /** @var FilamentSpatieLaravelBackupPlugin $plugin */
+        $plugin = filament()->getPlugin('filament-spatie-backup');
+
+        return $plugin->hasStatusListRecordsTable();
     }
 }

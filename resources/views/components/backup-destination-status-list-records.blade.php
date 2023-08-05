@@ -1,3 +1,3 @@
-<div wire:poll.{{ config('filament-spatie-laravel-backup.polling.interval') ?? '4s' }}>
+<div wire:poll.{{ $this->interval() }}>
 	{{ $this->table }}
 </div>

@@ -2,41 +2,65 @@
 
 namespace ShuvroRoy\FilamentSpatieLaravelBackup\Components;
 
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
 use Filament\Tables;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Models\BackupDestinationStatus;
 
-class BackupDestinationStatusListRecords extends Component implements Tables\Contracts\HasTable
+class BackupDestinationStatusListRecords extends Component implements HasForms, HasTable
 {
-    use Tables\Concerns\InteractsWithTable;
+    use InteractsWithTable;
+    use InteractsWithForms;
 
     public function render(): View
     {
         return view('filament-spatie-backup::components.backup-destination-status-list-records');
     }
 
-    protected function getTableQuery(): Builder
+    public function table(Table $table): Table
     {
-        return BackupDestinationStatus::query();
+        return $table
+            ->query(BackupDestinationStatus::query())
+            ->columns([
+                Tables\Columns\TextColumn::make('name')
+                    ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.name')),
+                Tables\Columns\TextColumn::make('disk')
+                    ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.disk')),
+                Tables\Columns\IconColumn::make('healthy')
+                    ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.healthy'))
+                    ->boolean(),
+                Tables\Columns\TextColumn::make('amount')
+                    ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.amount')),
+                Tables\Columns\TextColumn::make('newest')
+                    ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.newest')),
+                Tables\Columns\TextColumn::make('usedStorage')
+                    ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.used_storage'))
+                    ->badge(),
+            ])
+            ->filters([
+                // ...
+            ])
+            ->actions([
+                // ...
+            ])
+            ->bulkActions([
+                // ...
+            ]);
     }
 
-    protected function getTableColumns(): array
+    #[Computed]
+    public function interval(): string
     {
-        return [
-            Tables\Columns\TextColumn::make('name')
-                ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.name')),
-            Tables\Columns\TextColumn::make('disk')
-                ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.disk')),
-            Tables\Columns\BooleanColumn::make('healthy')
-                ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.healthy')),
-            Tables\Columns\TextColumn::make('amount')
-                ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.amount')),
-            Tables\Columns\TextColumn::make('newest')
-                ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.newest')),
-            Tables\Columns\BadgeColumn::make('usedStorage')
-                ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.used_storage')),
-        ];
+        /** @var FilamentSpatieLaravelBackupPlugin $plugin */
+        $plugin = filament()->getPlugin('filament-spatie-backup');
+
+        return $plugin->getPolingInterval();
     }
 }
