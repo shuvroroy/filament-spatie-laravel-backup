@@ -164,7 +164,7 @@ class AdminPanelProvider extends PanelProvider
 
 ## Upgrading
 
-Please see [UPGRADING](UPGRADING.md) for details on how to upgrade 1.X to 2.0.
+Please see [UPGRADE](UPGRADE.md) for details on how to upgrade 1.X to 2.0.
 
 ## Testing
 
