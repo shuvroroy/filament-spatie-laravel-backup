@@ -2,6 +2,19 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v2.0.1 - 2023-08-28
+
+### What's Changed
+
+- Dutch translations by @vanhooff in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/52
+- Updated Russian translation. by @den1n in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/53
+
+### New Contributors
+
+- @vanhooff made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/52
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v2.0.0...v2.0.1
+
 ## v2.0.0 - 2023-08-05
 
 ### What's Changed
