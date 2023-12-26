@@ -6,7 +6,7 @@ return [
         'backup_destination_list' => [
             'table' => [
                 'actions' => [
-                    'download' => 'Download',
+                    'download' => 'Descarregar',
                     'delete' => 'Eliminar',
                 ],
 
