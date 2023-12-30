@@ -2,6 +2,14 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v2.1.3 - 2023-12-30
+
+### What's Changed
+
+* Renamed folder name to match Filaments i18n structure by @Corvisier in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/59
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v2.1.2...v2.1.3
+
 ## v2.1.2 - 2023-12-25
 
 ### What's Changed
