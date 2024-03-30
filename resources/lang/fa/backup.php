@@ -29,7 +29,7 @@ return [
                     'name' => 'نام',
                     'disk' => 'دیسک',
                     'healthy' => 'سالم',
-                    'amount' => 'اندازه',
+                    'amount' => 'تعداد',
                     'newest' => 'جدیدترین',
                     'used_storage' => 'فضای استفاده شده',
                 ],
