@@ -14,6 +14,10 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 
     protected string $interval = '4s';
 
+    protected ?string $runCrontab = null;
+
+    protected ?string $cleanCrontab = null;
+
     protected bool $hasStatusListRecordsTable = true;
 
     public function register(Panel $panel): void
@@ -82,5 +86,29 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
     public function hasStatusListRecordsTable(): bool
     {
         return $this->hasStatusListRecordsTable;
+    }
+
+    public function setRunCrontab(string $schedule): static
+    {
+        $this->runCrontab = $schedule;
+
+        return $this;
+    }
+
+    public function getRunCrontab(): ?string
+    {
+        return $this->runCrontab;
+    }
+
+    public function setCleanCrontab(string $schedule): static
+    {
+        $this->cleanCrontab = $schedule;
+
+        return $this;
+    }
+
+    public function getCleanCrontab(): ?string
+    {
+        return $this->cleanCrontab;
     }
 }
