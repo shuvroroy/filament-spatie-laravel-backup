@@ -17,8 +17,10 @@ class CreateBackupJob implements ShouldQueue
     use Queueable;
 
     public function __construct(
-        protected readonly Option $option = Option::ALL
-    ){}
+        protected readonly Option $option = Option::ALL,
+        protected readonly ?int $timeout = null,
+    ) {
+    }
 
     public function handle(): void
     {
@@ -27,9 +29,10 @@ class CreateBackupJob implements ShouldQueue
             '--only-files' => $this->option === Option::ONLY_FILES,
             '--filename' => match ($this->option) {
                 Option::ALL => null,
-                default => str_replace('_', '-', $this->option->value).
-                    '-'.date('Y-m-d-H-i-s').'.zip'
+                default => str_replace('_', '-', $this->option->value) .
+                    '-' . date('Y-m-d-H-i-s') . '.zip'
             },
+            '--timeout' => $this->timeout,
         ]);
     }
 }
