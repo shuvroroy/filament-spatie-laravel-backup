@@ -86,6 +86,16 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
         return $this;
     }
 
+    /**
+     * Make it so that the backup job will never timeout.
+     *
+     * @see https://www.php.net/manual/en/function.set-time-limit.php
+     */
+    public function noTimeout(): static
+    {
+        return $this->timeout(0);
+    }
+
     public function getTimeout(): ?int
     {
         return $this->timeout;
