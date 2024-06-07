@@ -79,9 +79,9 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
      *
      * @see https://www.php.net/manual/en/function.set-time-limit.php
      */
-    public function timeout(int $timeout): static
+    public function timeout(int $seconds): static
     {
-        $this->timeout = $timeout;
+        $this->timeout = $seconds;
 
         return $this;
     }
