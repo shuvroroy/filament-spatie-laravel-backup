@@ -58,7 +58,7 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
-If you want to override the default `HealthCheckResults` page icon, heading then you can extend the page class and override the `navigationIcon` property and `getHeading` method and so on.
+If you want to override the default `Backups` page icon, heading then you can extend the page class and override the `navigationIcon` property and `getHeading` method and so on.
 
 ```php
 <?php
