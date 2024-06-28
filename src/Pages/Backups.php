@@ -16,6 +16,8 @@ class Backups extends Page
 
     protected static string $view = 'filament-spatie-backup::pages.backups';
 
+    public int $timeout = 300;
+
     public function getHeading(): string | Htmlable
     {
         return __('filament-spatie-backup::backup.pages.backups.heading');
@@ -51,7 +53,7 @@ class Backups extends Page
         /** @var FilamentSpatieLaravelBackupPlugin $plugin */
         $plugin = filament()->getPlugin('filament-spatie-backup');
 
-        CreateBackupJob::dispatch(Option::from($option))
+        CreateBackupJob::dispatch(Option::from($option), $this->timeout)
             ->onQueue($plugin->getQueue())
             ->afterResponse();
 

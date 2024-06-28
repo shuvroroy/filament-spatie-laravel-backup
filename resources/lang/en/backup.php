@@ -57,6 +57,8 @@ return [
                     'db_and_files' => 'DB & Files',
                 ],
 
+                'timeout' => 'Timeout in seconds',
+
                 'label' => 'Please choose an option',
             ],
 
