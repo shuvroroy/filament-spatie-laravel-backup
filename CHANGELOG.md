@@ -2,6 +2,26 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v2.1.4 - 2024-06-28
+
+### What's Changed
+
+* Add Simplified Chinese translation by @curder in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/63
+* Add Farsi translations by @mokhosh in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/62
+* Korean translations add by @corean in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/61
+* fix wrong class name by @nikcani in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/68
+* added german language file by @jetwes in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/71
+
+### New Contributors
+
+* @curder made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/63
+* @mokhosh made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/62
+* @corean made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/61
+* @nikcani made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/68
+* @jetwes made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/71
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v2.1.3...v2.1.4
+
 ## v2.1.3 - 2023-12-30
 
 ### What's Changed
