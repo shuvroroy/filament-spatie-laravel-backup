@@ -129,7 +129,7 @@ class AdminPanelProvider extends PanelProvider
             // ...
             ->plugin(
                 FilamentSpatieLaravelBackupPlugin::make()
-                    ->usingPolingInterval('10s') // default value is 4s
+                    ->usingPollingInterval('10s') // default value is 4s
             );
     }
 }

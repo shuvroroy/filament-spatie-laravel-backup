@@ -62,14 +62,30 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
         return $this->queue;
     }
 
+    /**
+     * @deprecated 2.2.0 Deprecated for the typo in the name. May be removed in a future major release. Use {@see \ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin::usingPollingInterval} instead.
+     */
     public function usingPolingInterval(string $interval): static
+    {
+        return $this->usingPollingInterval($interval);
+    }
+
+    public function usingPollingInterval(string $interval): static
     {
         $this->interval = $interval;
 
         return $this;
     }
 
+    /**
+     * @deprecated 2.2.0 Deprecated for the typo in the name. May be removed in a future major release. Use {@see \ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin::getPollingInterval} instead.
+     */
     public function getPolingInterval(): string
+    {
+        return $this->getPollingInterval();
+    }
+
+    public function getPollingInterval(): string
     {
         return $this->interval;
     }

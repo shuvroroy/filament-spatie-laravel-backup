@@ -61,6 +61,6 @@ class BackupDestinationStatusListRecords extends Component implements HasForms, 
         /** @var FilamentSpatieLaravelBackupPlugin $plugin */
         $plugin = filament()->getPlugin('filament-spatie-backup');
 
-        return $plugin->getPolingInterval();
+        return $plugin->getPollingInterval();
     }
 }
