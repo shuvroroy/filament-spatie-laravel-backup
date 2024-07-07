@@ -17,8 +17,7 @@ class CreateBackupJob implements ShouldQueue
     use Queueable;
 
     public function __construct(
-        protected readonly Option $option = Option::ALL,
-        protected int $timeout = 300
+        protected readonly Option $option = Option::ALL
     ){}
 
     public function handle(): void
@@ -31,7 +30,6 @@ class CreateBackupJob implements ShouldQueue
                 default => str_replace('_', '-', $this->option->value).
                     '-'.date('Y-m-d-H-i-s').'.zip'
             },
-            '--timeout' => $this->timeout,
         ]);
     }
 }
