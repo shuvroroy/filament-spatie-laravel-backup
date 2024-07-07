@@ -162,6 +162,60 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
+## Customising the timeout
+
+You can customise the timeout for the backup job by following the steps below:
+
+```php
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Panel;
+use Filament\PanelProvider;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            // ...
+            ->plugin(
+                FilamentSpatieLaravelBackupPlugin::make()
+                    ->timeout(120) // default value is max_execution_time from php.ini, or 30s if it wasn't defined
+            );
+    }
+}
+```
+
+For more details refer to the [set_time_limit](https://www.php.net/manual/en/function.set-time-limit.php) function.
+
+You can also disable the timeout altogether to let the job run as long as needed:
+
+```php
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Panel;
+use Filament\PanelProvider;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            // ...
+            ->plugin(
+                FilamentSpatieLaravelBackupPlugin::make()
+                    ->noTimeout()
+            );
+    }
+}
+```
+
 ## Upgrading
 
 Please see [UPGRADE](UPGRADE.md) for details on how to upgrade 1.X to 2.0.

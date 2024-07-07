@@ -51,7 +51,7 @@ class Backups extends Page
         /** @var FilamentSpatieLaravelBackupPlugin $plugin */
         $plugin = filament()->getPlugin('filament-spatie-backup');
 
-        CreateBackupJob::dispatch(Option::from($option))
+        CreateBackupJob::dispatch(Option::from($option), $plugin->getTimeout())
             ->onQueue($plugin->getQueue())
             ->afterResponse();
 
