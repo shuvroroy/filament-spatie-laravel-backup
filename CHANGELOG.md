@@ -2,6 +2,14 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v2.2.0 - 2024-07-07
+
+### What's Changed
+
+* Added timeout option in modal by @jetwes in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/72
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v2.1.4...v2.2.0
+
 ## v2.1.4 - 2024-06-28
 
 ### What's Changed
