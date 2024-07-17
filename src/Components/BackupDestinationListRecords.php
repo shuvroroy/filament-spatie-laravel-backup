@@ -40,6 +40,8 @@ class BackupDestinationListRecords extends Component implements HasForms, HasTab
 
     public function table(Table $table): Table
     {
+        $plugin = filament()->getPlugin('filament-spatie-backup');
+
         return $table
             ->query(BackupDestination::query())
             ->columns([
@@ -69,13 +71,13 @@ class BackupDestinationListRecords extends Component implements HasForms, HasTab
                 Tables\Actions\Action::make('download')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.download'))
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->visible(fn():bool => filament()->getPlugin('filament-spatie-backup')->getdownloadable()))
+                    ->visible(fn():bool => $plugin->getdownloadable())
                     ->action(fn (BackupDestination $record) => Storage::disk($record->disk)->download($record->path)),
 
                 Tables\Actions\Action::make('delete')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.delete'))
                     ->icon('heroicon-o-trash')
-                    ->visible(fn():bool => filament()->getPlugin('filament-spatie-backup')->getdeletable()))
+                    ->visible(fn():bool => $plugin->getdeletable())
                     ->requiresConfirmation()
                     ->action(function (BackupDestination $record) {
                         SpatieBackupDestination::create($record->disk, config('backup.backup.name'))
