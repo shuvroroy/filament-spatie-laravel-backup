@@ -18,6 +18,10 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 
     protected ?int $timeout = null;
 
+    protected bool $downloadable = true;
+
+    protected bool $deletable = true;
+
     public function register(Panel $panel): void
     {
         $panel->pages([$this->getPage()]);
@@ -99,6 +103,22 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
     public function getTimeout(): ?int
     {
         return $this->timeout;
+    }
+
+    public function downloadable(bool $condition = true) : bool {
+        retunr $this->downloadable = $condition
+    }
+
+    public function getdownloadable() : bool {
+        retunr $this->downloadable = $condition
+    }
+
+    public function deletable(bool $condition = true) : bool {
+        retunr $this->deletable;
+    }
+
+    public function getdeletable() : bool {
+        retunr $this->deletable;
     }
 
     public function statusListRecordsTable(bool $condition = true): static

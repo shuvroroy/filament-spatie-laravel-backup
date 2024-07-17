@@ -82,6 +82,31 @@ class Backups extends BaseBackups
     }
 }
 ```
+
+If you want to hide and show the file download and delete action in Table Actions.
+
+```php
+<?php
+
+namespace App\Filament\Pages;
+
+use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups as BaseBackups;
+
+class Backups extends BaseBackups
+{
+    protected static ?string $navigationIcon = 'heroicon-o-cpu-chip';
+
+    public function getHeading(): string | Htmlable
+    {
+        return 'Application Backups';
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Core';
+    }
+}
+```
 Then register the extended page class on `AdminPanelProvider` class.
 
 ```php
