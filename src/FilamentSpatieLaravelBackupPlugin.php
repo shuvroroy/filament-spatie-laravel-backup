@@ -105,16 +105,18 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
         return $this->timeout;
     }
 
-    public function downloadable(bool $condition = true) : bool {
-        return $this->downloadable = $condition;
+    public function downloadable(bool $condition = true) : static {
+        $this->downloadable = $condition;
+        return $this;
     }
 
     public function getdownloadable() : bool {
         return $this->downloadable;
     }
 
-    public function deletable(bool $condition = true) : bool {
-        return $this->deletable = $condition;
+    public function deletable(bool $condition = true) : static {
+        $this->deletable = $condition;
+        return $this;
     }
 
     public function getdeletable() : bool {
