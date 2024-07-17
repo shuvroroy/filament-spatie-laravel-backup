@@ -80,6 +80,7 @@ class Backups extends BaseBackups
     {
         return 'Core';
     }
+
 }
 ```
 
@@ -88,22 +89,24 @@ If you want to hide and show the file download and delete action in Table Action
 ```php
 <?php
 
-namespace App\Filament\Pages;
+namespace App\Providers\Filament;
 
-use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups as BaseBackups;
+use Filament\Panel;
+use Filament\PanelProvider;
+use App\Filament\Pages\Backups;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 
-class Backups extends BaseBackups
+class AdminPanelProvider extends PanelProvider
 {
-    protected static ?string $navigationIcon = 'heroicon-o-cpu-chip';
-
-    public function getHeading(): string | Htmlable
+    public function panel(Panel $panel): Panel
     {
-        return 'Application Backups';
-    }
-
-    public static function getNavigationGroup(): ?string
-    {
-        return 'Core';
+        return $panel
+            // ...
+            ->plugin(
+                FilamentSpatieLaravelBackupPlugin::make()
+                    ->downloadable(true)
+                    ->deletable(true)
+            );
     }
 }
 ```
