@@ -9,15 +9,13 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
-use Livewire\Attributes\Computed;
 use Livewire\Component;
-use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Models\BackupDestinationStatus;
 
 class BackupDestinationStatusListRecords extends Component implements HasForms, HasTable
 {
-    use InteractsWithTable;
     use InteractsWithForms;
+    use InteractsWithTable;
 
     public function render(): View
     {
@@ -26,6 +24,8 @@ class BackupDestinationStatusListRecords extends Component implements HasForms, 
 
     public function table(Table $table): Table
     {
+        $plugin = filament()->getPlugin('filament-spatie-backup');
+
         return $table
             ->query(BackupDestinationStatus::query())
             ->columns([
@@ -52,15 +52,7 @@ class BackupDestinationStatusListRecords extends Component implements HasForms, 
             ])
             ->bulkActions([
                 // ...
-            ]);
-    }
-
-    #[Computed]
-    public function interval(): string
-    {
-        /** @var FilamentSpatieLaravelBackupPlugin $plugin */
-        $plugin = filament()->getPlugin('filament-spatie-backup');
-
-        return $plugin->getPolingInterval();
+            ])
+            ->poll($plugin->getPolingInterval());
     }
 }

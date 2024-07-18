@@ -10,19 +10,19 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Attributes\Computed;
 use Livewire\Component;
+use PhpParser\Node\Stmt\Label;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackup;
-use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Models\BackupDestination;
 use Spatie\Backup\BackupDestination\Backup;
 use Spatie\Backup\BackupDestination\BackupDestination as SpatieBackupDestination;
 
 class BackupDestinationListRecords extends Component implements HasForms, HasTable
 {
-    use InteractsWithTable;
     use InteractsWithForms;
+    use InteractsWithTable;
 
     /**
      * @var array<int|string, array<string, string>|string>
@@ -68,16 +68,28 @@ class BackupDestinationListRecords extends Component implements HasForms, HasTab
                     ->options(FilamentSpatieLaravelBackup::getFilterDisks()),
             ])
             ->actions([
+                Tables\Actions\Action::make('restore')
+                    ->label('Restore')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    // ->visible(fn (): bool => $plugin->getdownloadable())
+                    ->action(
+                        fn (BackupDestination $record) =>
+                        Artisan::call('backup:restore', [
+                            '--backup' => $record->path,
+                        ])
+                    ),
+
+
                 Tables\Actions\Action::make('download')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.download'))
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->visible(fn():bool => $plugin->getdownloadable())
+                    ->visible(fn (): bool => $plugin->getdownloadable())
                     ->action(fn (BackupDestination $record) => Storage::disk($record->disk)->download($record->path)),
 
                 Tables\Actions\Action::make('delete')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.delete'))
                     ->icon('heroicon-o-trash')
-                    ->visible(fn():bool => $plugin->getdeletable())
+                    ->visible(fn (): bool => $plugin->getdeletable())
                     ->requiresConfirmation()
                     ->action(function (BackupDestination $record) {
                         SpatieBackupDestination::create($record->disk, config('backup.backup.name'))
@@ -95,15 +107,7 @@ class BackupDestinationListRecords extends Component implements HasForms, HasTab
             ])
             ->bulkActions([
                 // ...
-            ]);
-    }
-
-    #[Computed]
-    public function interval(): string
-    {
-        /** @var FilamentSpatieLaravelBackupPlugin $plugin */
-        $plugin = filament()->getPlugin('filament-spatie-backup');
-
-        return $plugin->getPolingInterval();
+            ])
+            ->poll($plugin->getPolingInterval());
     }
 }

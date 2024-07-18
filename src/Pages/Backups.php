@@ -70,4 +70,26 @@ class Backups extends Page
 
         return $plugin->hasStatusListRecordsTable();
     }
+
+    public function shouldDisplayOnlyDBButton(): bool
+    {
+        /** @var FilamentSpatieLaravelBackupPlugin $plugin */
+        $plugin = filament()->getPlugin('filament-spatie-backup');
+
+        return $plugin->hasDisplayOnlyDBButton();
+    }
+    public function shouldDisplayOnlyFilesButton(): bool
+    {
+        /** @var FilamentSpatieLaravelBackupPlugin $plugin */
+        $plugin = filament()->getPlugin('filament-spatie-backup');
+
+        return $plugin->hasDisplayOnlyFilesButton();
+    }
+    public function shouldDisplayDbAndFilesButton(): bool
+    {
+        /** @var FilamentSpatieLaravelBackupPlugin $plugin */
+        $plugin = filament()->getPlugin('filament-spatie-backup');
+
+        return $plugin->hasDisplayDbAndFilesButton();
+    }
 }

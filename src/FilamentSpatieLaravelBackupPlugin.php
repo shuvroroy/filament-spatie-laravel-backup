@@ -16,6 +16,12 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 
     protected bool $hasStatusListRecordsTable = true;
 
+    protected bool $hasDisplayOnlyDBButton = true;
+
+    protected bool $hasDisplayOnlyFilesButton = true;
+
+    protected bool $hasDisplayDbAndFilesButton = true;
+
     protected ?int $timeout = null;
 
     protected bool $downloadable = true;
@@ -105,21 +111,27 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
         return $this->timeout;
     }
 
-    public function downloadable(bool $condition = true) : static {
+    public function downloadable(bool $condition = true): static
+    {
         $this->downloadable = $condition;
+
         return $this;
     }
 
-    public function getdownloadable() : bool {
+    public function getdownloadable(): bool
+    {
         return $this->downloadable;
     }
 
-    public function deletable(bool $condition = true) : static {
+    public function deletable(bool $condition = true): static
+    {
         $this->deletable = $condition;
+
         return $this;
     }
 
-    public function getdeletable() : bool {
+    public function getdeletable(): bool
+    {
         return $this->deletable;
     }
 
@@ -133,5 +145,41 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
     public function hasStatusListRecordsTable(): bool
     {
         return $this->hasStatusListRecordsTable;
+    }
+
+    public function shouldDisplayOnlyDBButton(bool $condition = true): static
+    {
+        $this->hasDisplayOnlyDBButton = $condition;
+
+        return $this;
+    }
+
+    public function hasDisplayOnlyDBButton(): bool
+    {
+        return $this->hasDisplayOnlyDBButton;
+    }
+
+    public function shouldDisplayOnlyFilesButton(bool $condition = true): static
+    {
+        $this->hasDisplayOnlyFilesButton = $condition;
+
+        return $this;
+    }
+
+    public function hasDisplayOnlyFilesButton(): bool
+    {
+        return $this->hasDisplayOnlyFilesButton;
+    }
+
+    public function shouldDisplayDbAndFilesButton(bool $condition = true): static
+    {
+        $this->hasDisplayDbAndFilesButton = $condition;
+
+        return $this;
+    }
+
+    public function hasDisplayDbAndFilesButton(): bool
+    {
+        return $this->hasDisplayDbAndFilesButton;
     }
 }
