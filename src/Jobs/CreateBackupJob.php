@@ -19,8 +19,7 @@ class CreateBackupJob implements ShouldQueue
     public function __construct(
         protected readonly Option $option = Option::ALL,
         protected readonly ?int $timeout = null,
-    ) {
-    }
+    ) {}
 
     public function handle(): void
     {

@@ -80,6 +80,34 @@ class Backups extends BaseBackups
     {
         return 'Core';
     }
+
+}
+```
+
+If you want to hide and show the file download and delete action in Table Actions.
+
+```php
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Panel;
+use Filament\PanelProvider;
+use App\Filament\Pages\Backups;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            // ...
+            ->plugin(
+                FilamentSpatieLaravelBackupPlugin::make()
+                    ->downloadable(true)
+                    ->deletable(true)
+            );
+    }
 }
 ```
 Then register the extended page class on `AdminPanelProvider` class.

@@ -16,17 +16,23 @@
 
             <x-slot name="footer" >
                 <div class="flex gap-x-2">
-                    <x-filament::button wire:click="create('only-db')" color="primary" class="w-full">
-                        {{ __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_db') }}
-                    </x-filament::button>
+                    @if($this->shouldDisplayOnlyDBButton())
+                        <x-filament::button wire:click="create('only-db')" color="primary" class="w-full">
+                            {{ __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_db') }}
+                        </x-filament::button>
+                    @endif
 
-                    <x-filament::button wire:click="create('only-files')" color="info" class="w-full">
-                        {{ __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_files') }}
-                    </x-filament::button>
+                    @if($this->shouldDisplayOnlyFilesButton())
+                        <x-filament::button wire:click="create('only-files')" color="info" class="w-full">
+                            {{ __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_files') }}
+                        </x-filament::button>
+                    @endif
 
-                    <x-filament::button wire:click="create()" color="success" class="w-full">
-                        {{ __('filament-spatie-backup::backup.pages.backups.modal.buttons.db_and_files') }}
-                    </x-filament::button>
+                    @if($this->shouldDisplayDbAndFilesButton())
+                        <x-filament::button wire:click="create()" color="success" class="w-full">
+                            {{ __('filament-spatie-backup::backup.pages.backups.modal.buttons.db_and_files') }}
+                        </x-filament::button>
+                    @endif
                 </div>
             </x-slot>
         </x-filament::modal>
