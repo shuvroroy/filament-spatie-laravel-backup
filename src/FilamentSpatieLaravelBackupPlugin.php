@@ -16,6 +16,8 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 
     protected bool $hasStatusListRecordsTable = true;
 
+    protected ?int $timeout = null;
+
     public function register(Panel $panel): void
     {
         $panel->pages([$this->getPage()]);
@@ -70,6 +72,33 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
     public function getPolingInterval(): string
     {
         return $this->interval;
+    }
+
+    /**
+     * Set the timeout (in seconds) used for the backup job. If set to 0, the job will never timeout.
+     *
+     * @see https://www.php.net/manual/en/function.set-time-limit.php
+     */
+    public function timeout(int $seconds): static
+    {
+        $this->timeout = $seconds;
+
+        return $this;
+    }
+
+    /**
+     * Make it so that the backup job will never timeout.
+     *
+     * @see https://www.php.net/manual/en/function.set-time-limit.php
+     */
+    public function noTimeout(): static
+    {
+        return $this->timeout(0);
+    }
+
+    public function getTimeout(): ?int
+    {
+        return $this->timeout;
     }
 
     public function statusListRecordsTable(bool $condition = true): static

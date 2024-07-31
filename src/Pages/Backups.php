@@ -6,6 +6,7 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
+use ShuvroRoy\FilamentSpatieLaravelBackup\Enums\Option;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Jobs\CreateBackupJob;
 
@@ -50,7 +51,7 @@ class Backups extends Page
         /** @var FilamentSpatieLaravelBackupPlugin $plugin */
         $plugin = filament()->getPlugin('filament-spatie-backup');
 
-        dispatch(new CreateBackupJob($option))
+        CreateBackupJob::dispatch(Option::from($option), $plugin->getTimeout())
             ->onQueue($plugin->getQueue())
             ->afterResponse();
 

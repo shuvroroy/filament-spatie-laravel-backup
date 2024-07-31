@@ -2,6 +2,81 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v2.2.0 - 2024-07-07
+
+### What's Changed
+
+* Added timeout option in modal by @jetwes in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/72
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v2.1.4...v2.2.0
+
+## v2.1.4 - 2024-06-28
+
+### What's Changed
+
+* Add Simplified Chinese translation by @curder in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/63
+* Add Farsi translations by @mokhosh in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/62
+* Korean translations add by @corean in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/61
+* fix wrong class name by @nikcani in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/68
+* added german language file by @jetwes in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/71
+
+### New Contributors
+
+* @curder made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/63
+* @mokhosh made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/62
+* @corean made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/61
+* @nikcani made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/68
+* @jetwes made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/71
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v2.1.3...v2.1.4
+
+## v2.1.3 - 2023-12-30
+
+### What's Changed
+
+* Renamed folder name to match Filaments i18n structure by @Corvisier in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/59
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v2.1.2...v2.1.3
+
+## v2.1.2 - 2023-12-25
+
+### What's Changed
+
+* European Portuguese by @Corvisier in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/58
+
+### New Contributors
+
+* @Corvisier made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/58
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v2.1.1...v2.1.2
+
+## v2.1.1 - 2023-12-20
+
+### What's Changed
+
+* Add Czech translations by @musilondrej in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/57
+* Add Indonesian translation by @lakuapik in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/56
+
+### New Contributors
+
+* @musilondrej made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/57
+* @lakuapik made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/56
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v2.1.0...v2.1.1
+
+## v2.0.1 - 2023-08-28
+
+### What's Changed
+
+- Dutch translations by @vanhooff in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/52
+- Updated Russian translation. by @den1n in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/53
+
+### New Contributors
+
+- @vanhooff made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/52
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v2.0.0...v2.0.1
+
 ## v2.0.0 - 2023-08-05
 
 ### What's Changed

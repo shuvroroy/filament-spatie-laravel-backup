@@ -58,7 +58,7 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
-If you want to override the default `HealthCheckResults` page icon, heading then you can extend the page class and override the `navigationIcon` property and `getHeading` method and so on.
+If you want to override the default `Backups` page icon, heading then you can extend the page class and override the `navigationIcon` property and `getHeading` method and so on.
 
 ```php
 <?php
@@ -157,6 +157,60 @@ class AdminPanelProvider extends PanelProvider
             ->plugin(
                 FilamentSpatieLaravelBackupPlugin::make()
                     ->usingQueue('my-queue') // default value is null
+            );
+    }
+}
+```
+
+## Customising the timeout
+
+You can customise the timeout for the backup job by following the steps below:
+
+```php
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Panel;
+use Filament\PanelProvider;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            // ...
+            ->plugin(
+                FilamentSpatieLaravelBackupPlugin::make()
+                    ->timeout(120) // default value is max_execution_time from php.ini, or 30s if it wasn't defined
+            );
+    }
+}
+```
+
+For more details refer to the [set_time_limit](https://www.php.net/manual/en/function.set-time-limit.php) function.
+
+You can also disable the timeout altogether to let the job run as long as needed:
+
+```php
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Panel;
+use Filament\PanelProvider;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            // ...
+            ->plugin(
+                FilamentSpatieLaravelBackupPlugin::make()
+                    ->noTimeout()
             );
     }
 }
