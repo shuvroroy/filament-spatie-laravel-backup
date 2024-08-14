@@ -2,6 +2,14 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v2.2.2 - 2024-08-14
+
+### What's Changed
+
+* Fixed type error when spatie/laravel-backup@v9 is used by @den1n in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/79
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v2.2.1...v2.2.2
+
 ## v2.2.1 - 2024-08-13
 
 ### What's Changed
