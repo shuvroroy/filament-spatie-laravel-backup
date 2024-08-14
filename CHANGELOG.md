@@ -2,6 +2,14 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v2.2.1 - 2024-08-13
+
+### What's Changed
+
+* Added spatie/laravel-backup v9 to composer.json by @den1n in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/77
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v2.2.0...v2.2.1
+
 ## v2.2.0 - 2024-07-07
 
 ### What's Changed
