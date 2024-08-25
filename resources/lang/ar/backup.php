@@ -47,6 +47,7 @@ return [
 
             'messages' => [
                 'backup_success' => 'إنشاء نسخة إحتياطية في الخلفية.',
+                'backup_delete_success' => 'تم حذف النسخة الإحتياطية بنجاح.',
             ],
 
             'modal' => [
