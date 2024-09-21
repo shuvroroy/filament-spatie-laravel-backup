@@ -77,6 +77,8 @@ class BackupDestinationListRecords extends Component implements HasForms, HasTab
                     ->icon('heroicon-o-trash')
                     ->visible(auth()->user()->can('delete-backup'))
                     ->requiresConfirmation()
+                    ->color('danger')
+                    ->modalIcon('heroicon-o-trash')
                     ->action(function (BackupDestination $record) {
                         SpatieBackupDestination::create($record->disk, config('backup.backup.name'))
                             ->backups()
