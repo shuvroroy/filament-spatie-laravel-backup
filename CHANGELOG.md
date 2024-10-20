@@ -2,6 +2,20 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v2.2.3 - 2024-10-20
+
+### What's Changed
+
+* Added Italian translation, fixed delete action color and modal icon by @marcogermani87 in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/82
+* Add missing translation option 'backup_delete_success' by @alkoumi in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/81
+
+### New Contributors
+
+* @marcogermani87 made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/82
+* @alkoumi made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/81
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v2.2.2...v2.2.3
+
 ## v2.2.2 - 2024-08-14
 
 ### What's Changed
