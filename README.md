@@ -1,7 +1,6 @@
 # Filament Spatie Laravel Backup
 
 [![PHP Version Require](https://poser.pugx.org/shuvroroy/filament-spatie-laravel-backup/require/php)](https://packagist.org/packages/shuvroroy/filament-spatie-laravel-backup)
-<a href="https://github.com/shuvroroy/filament-spatie-laravel-backup/actions"><img src="https://github.com/shuvroroy/filament-spatie-laravel-backup/workflows/run-tests/badge.svg" alt="Build Status"></a>
 [![Latest Stable Version](https://poser.pugx.org/shuvroroy/filament-spatie-laravel-backup/v)](https://packagist.org/packages/shuvroroy/filament-spatie-laravel-backup)
 [![Total Downloads](https://poser.pugx.org/shuvroroy/filament-spatie-laravel-backup/downloads)](https://packagist.org/packages/shuvroroy/filament-spatie-laravel-backup)
 [![License](https://poser.pugx.org/shuvroroy/filament-spatie-laravel-backup/license)](https://packagist.org/packages/shuvroroy/filament-spatie-laravel-backup)
