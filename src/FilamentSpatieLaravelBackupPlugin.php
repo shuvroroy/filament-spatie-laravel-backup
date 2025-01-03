@@ -4,10 +4,15 @@ namespace ShuvroRoy\FilamentSpatieLaravelBackup;
 
 use Filament\Contracts\Plugin;
 use Filament\Panel;
+use Filament\Support\Concerns\EvaluatesClosures;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups;
 
 class FilamentSpatieLaravelBackupPlugin implements Plugin
 {
+    use EvaluatesClosures;
+
+    protected bool | \Closure $authorizeUsing = true;
+
     protected string $page = Backups::class;
 
     protected ?string $queue = null;
@@ -26,6 +31,26 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
     public function boot(Panel $panel): void
     {
         //
+    }
+
+    public function authorize(bool | \Closure $callback = true): static
+    {
+        $this->authorizeUsing = $callback;
+
+        return $this;
+    }
+
+    public function isAuthorized(): bool
+    {
+        return $this->evaluate($this->authorizeUsing) === true;
+    }
+
+    public static function get(): static
+    {
+        /** @var static $instance */
+        $instance = filament(app(static::class)->getId());
+
+        return $instance;
     }
 
     public function getId(): string
