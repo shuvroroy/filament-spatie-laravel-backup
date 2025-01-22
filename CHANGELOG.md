@@ -2,6 +2,18 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v2.3.4 - 2025-01-22
+
+### What's Changed
+
+* Add authorize method by @SanderMuller in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/84
+
+### New Contributors
+
+* @SanderMuller made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/84
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v2.2.3...v2.2.4
+
 ## v2.2.3 - 2024-10-20
 
 ### What's Changed
