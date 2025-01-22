@@ -104,6 +104,6 @@ class BackupDestinationListRecords extends Component implements HasForms, HasTab
         /** @var FilamentSpatieLaravelBackupPlugin $plugin */
         $plugin = filament()->getPlugin('filament-spatie-backup');
 
-        return $plugin->getPolingInterval();
+        return $plugin->getPollingInterval();
     }
 }
