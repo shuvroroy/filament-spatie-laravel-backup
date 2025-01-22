@@ -70,4 +70,9 @@ class Backups extends Page
 
         return $plugin->hasStatusListRecordsTable();
     }
+
+    public static function canAccess(): bool
+    {
+        return FilamentSpatieLaravelBackupPlugin::get()->isAuthorized();
+    }
 }
