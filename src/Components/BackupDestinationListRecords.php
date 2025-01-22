@@ -21,8 +21,8 @@ use Spatie\Backup\BackupDestination\BackupDestination as SpatieBackupDestination
 
 class BackupDestinationListRecords extends Component implements HasForms, HasTable
 {
-    use InteractsWithTable;
     use InteractsWithForms;
+    use InteractsWithTable;
 
     /**
      * @var array<int|string, array<string, string>|string>

@@ -16,8 +16,8 @@ use ShuvroRoy\FilamentSpatieLaravelBackup\Models\BackupDestinationStatus;
 
 class BackupDestinationStatusListRecords extends Component implements HasForms, HasTable
 {
-    use InteractsWithTable;
     use InteractsWithForms;
+    use InteractsWithTable;
 
     public function render(): View
     {

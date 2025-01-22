@@ -58,7 +58,7 @@ class FilamentSpatieLaravelBackup
             $config = class_exists('Spatie\Backup\Config\MonitoredBackupsConfig')
                 ? MonitoredBackupsConfig::fromArray(config('backup.monitor_backups'))
                 : config('backup.monitor_backups');
-            
+
             return BackupDestinationStatusFactory::createForMonitorConfig($config)
                 ->map(function (BackupDestinationStatus $backupDestinationStatus, int | string $key) {
                     return [
