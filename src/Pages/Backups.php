@@ -46,7 +46,7 @@ class Backups extends Page
 
     public function create(string $option = ''): void
     {
-        dispatch(new CreateBackupJob($option))
+        dispatch(new CreateBackupJob(Option::from($option)))
             ->onQueue(config('filament-spatie-laravel-backup.queue'))
             ->afterResponse();
 
