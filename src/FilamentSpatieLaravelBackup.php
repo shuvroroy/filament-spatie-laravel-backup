@@ -5,6 +5,7 @@ namespace ShuvroRoy\FilamentSpatieLaravelBackup;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Backup\BackupDestination\Backup;
 use Spatie\Backup\BackupDestination\BackupDestination;
+use Spatie\Backup\Config\MonitoredBackupsConfig;
 use Spatie\Backup\Helpers\Format;
 use Spatie\Backup\Tasks\Monitor\BackupDestinationStatus;
 use Spatie\Backup\Tasks\Monitor\BackupDestinationStatusFactory;
@@ -56,7 +57,11 @@ class FilamentSpatieLaravelBackup
     public static function getBackupDestinationStatusData(): array
     {
         return Cache::remember('backup-statuses', now()->addSeconds(4), function () {
-            return BackupDestinationStatusFactory::createForMonitorConfig(config('backup.monitor_backups'))
+            $config = class_exists('Spatie\Backup\Config\MonitoredBackupsConfig')
+                ? MonitoredBackupsConfig::fromArray(config('backup.monitor_backups'))
+                : config('backup.monitor_backups');
+
+            return BackupDestinationStatusFactory::createForMonitorConfig($config)
                 ->map(function (BackupDestinationStatus $backupDestinationStatus, int | string $key) {
                     return [
                         'id' => $key,

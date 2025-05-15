@@ -4,6 +4,7 @@ namespace ShuvroRoy\FilamentSpatieLaravelBackup\Pages;
 
 use Filament\Pages\Actions;
 use Filament\Pages\Page;
+use ShuvroRoy\FilamentSpatieLaravelBackup\Enums\Option;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Jobs\CreateBackupJob;
 
 class Backups extends Page
@@ -47,7 +48,7 @@ class Backups extends Page
 
     public function create(string $option = ''): void
     {
-        dispatch(new CreateBackupJob($option))
+        dispatch(new CreateBackupJob(Option::from($option)))
             ->onQueue(config('filament-spatie-laravel-backup.queue'))
             ->afterResponse();
 
