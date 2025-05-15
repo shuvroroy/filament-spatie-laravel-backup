@@ -2,6 +2,18 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v1.4.0 - 2025-05-15
+
+### What's Changed
+
+* Fix for Issue #90 by @RChutchev in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/92
+
+### New Contributors
+
+* @RChutchev made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/92
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v1.3.1...v1.4.0
+
 ## v2.3.4 - 2025-01-22
 
 ### What's Changed
