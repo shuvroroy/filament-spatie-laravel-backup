@@ -2,6 +2,9 @@
 
 namespace ShuvroRoy\FilamentSpatieLaravelBackup\Components;
 
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Actions\Action;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
@@ -43,36 +46,36 @@ class BackupDestinationListRecords extends Component implements HasForms, HasTab
         return $table
             ->query(BackupDestination::query())
             ->columns([
-                Tables\Columns\TextColumn::make('path')
+                TextColumn::make('path')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.fields.path'))
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('disk')
+                TextColumn::make('disk')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.fields.disk'))
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('date')
+                TextColumn::make('date')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.fields.date'))
                     ->dateTime()
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('size')
+                TextColumn::make('size')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.fields.size'))
                     ->badge(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('disk')
+                SelectFilter::make('disk')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.filters.disk'))
                     ->options(FilamentSpatieLaravelBackup::getFilterDisks()),
             ])
-            ->actions([
-                Tables\Actions\Action::make('download')
+            ->recordActions([
+                Action::make('download')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.download'))
                     ->icon('heroicon-o-arrow-down-tray')
                     ->visible(auth()->user()->can('download-backup'))
                     ->action(fn (BackupDestination $record) => Storage::disk($record->disk)->download($record->path)),
 
-                Tables\Actions\Action::make('delete')
+                Action::make('delete')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.delete'))
                     ->icon('heroicon-o-trash')
                     ->visible(auth()->user()->can('delete-backup'))
@@ -93,7 +96,7 @@ class BackupDestinationListRecords extends Component implements HasForms, HasTab
                             ->send();
                     }),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 // ...
             ]);
     }

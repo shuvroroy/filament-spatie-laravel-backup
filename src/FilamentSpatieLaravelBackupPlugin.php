@@ -2,6 +2,7 @@
 
 namespace ShuvroRoy\FilamentSpatieLaravelBackup;
 
+use Closure;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Filament\Support\Concerns\EvaluatesClosures;
@@ -11,7 +12,7 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 {
     use EvaluatesClosures;
 
-    protected bool | \Closure $authorizeUsing = true;
+    protected bool | Closure $authorizeUsing = true;
 
     protected string $page = Backups::class;
 
@@ -33,7 +34,7 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
         //
     }
 
-    public function authorize(bool | \Closure $callback = true): static
+    public function authorize(bool | Closure $callback = true): static
     {
         $this->authorizeUsing = $callback;
 
