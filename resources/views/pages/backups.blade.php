@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     <div class="flex flex-col gap-y-8">
         @if($this->shouldDisplayStatusListRecords())
-            <div class="mb-10">
+            <div class="mb-8">
                 @livewire(ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationStatusListRecords::class)
             </div>
         @endif
