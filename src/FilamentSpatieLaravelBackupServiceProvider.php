@@ -26,7 +26,7 @@ class FilamentSpatieLaravelBackupServiceProvider extends PackageServiceProvider
         Livewire::component('backup-destination-status-list-records', BackupDestinationStatusListRecords::class);
 
         FilamentAsset::register([
-            Css::make('filament-spatie-backup-styles', __DIR__ . '/../resources/dist/plugin.css'),
-        ], 'filament-spatie-backup');
+            Css::make('filament-spatie-backup-styles', __DIR__ . '/../resources/dist/plugin.css')->loadedOnRequest(),
+        ], package: 'filament-spatie-backup');
     }
 }
