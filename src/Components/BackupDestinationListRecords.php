@@ -5,6 +5,8 @@ namespace ShuvroRoy\FilamentSpatieLaravelBackup\Components;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Actions\Action;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
@@ -22,8 +24,9 @@ use ShuvroRoy\FilamentSpatieLaravelBackup\Models\BackupDestination;
 use Spatie\Backup\BackupDestination\Backup;
 use Spatie\Backup\BackupDestination\BackupDestination as SpatieBackupDestination;
 
-class BackupDestinationListRecords extends Component implements HasForms, HasTable
+class BackupDestinationListRecords extends Component implements HasForms, HasTable, HasActions
 {
+    use InteractsWithActions;
     use InteractsWithForms;
     use InteractsWithTable;
 
