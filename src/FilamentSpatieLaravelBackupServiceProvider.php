@@ -2,13 +2,13 @@
 
 namespace ShuvroRoy\FilamentSpatieLaravelBackup;
 
-use Livewire\Livewire;
 use Filament\Support\Assets\Css;
-use Spatie\LaravelPackageTools\Package;
 use Filament\Support\Facades\FilamentAsset;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Livewire\Livewire;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationListRecords;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationStatusListRecords;
+use Spatie\LaravelPackageTools\Package;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 class FilamentSpatieLaravelBackupServiceProvider extends PackageServiceProvider
 {
