@@ -14,8 +14,8 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackup;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
-use ShuvroRoy\FilamentSpatieLaravelBackup\Models\BackupDestinationStatus;
 
 class BackupDestinationStatusListRecords extends Component implements HasActions, HasForms, HasTable
 {
@@ -31,7 +31,9 @@ class BackupDestinationStatusListRecords extends Component implements HasActions
     public function table(Table $table): Table
     {
         return $table
-            ->query(BackupDestinationStatus::query())
+            ->records(
+                fn () => FilamentSpatieLaravelBackup::getBackupDestinationStatusData()
+            )
             ->columns([
                 TextColumn::make('name')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.name')),
