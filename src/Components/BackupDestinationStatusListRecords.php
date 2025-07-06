@@ -2,6 +2,10 @@
 
 namespace ShuvroRoy\FilamentSpatieLaravelBackup\Components;
 
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Tables;
@@ -14,8 +18,9 @@ use Livewire\Component;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Models\BackupDestinationStatus;
 
-class BackupDestinationStatusListRecords extends Component implements HasForms, HasTable
+class BackupDestinationStatusListRecords extends Component implements HasForms, HasTable, HasActions
 {
+    use InteractsWithActions;
     use InteractsWithForms;
     use InteractsWithTable;
 
@@ -29,28 +34,28 @@ class BackupDestinationStatusListRecords extends Component implements HasForms, 
         return $table
             ->query(BackupDestinationStatus::query())
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.name')),
-                Tables\Columns\TextColumn::make('disk')
+                TextColumn::make('disk')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.disk')),
-                Tables\Columns\IconColumn::make('healthy')
+                IconColumn::make('healthy')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.healthy'))
                     ->boolean(),
-                Tables\Columns\TextColumn::make('amount')
+                TextColumn::make('amount')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.amount')),
-                Tables\Columns\TextColumn::make('newest')
+                TextColumn::make('newest')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.newest')),
-                Tables\Columns\TextColumn::make('usedStorage')
+                TextColumn::make('usedStorage')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.used_storage'))
                     ->badge(),
             ])
             ->filters([
                 // ...
             ])
-            ->actions([
+            ->recordActions([
                 // ...
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 // ...
             ]);
     }

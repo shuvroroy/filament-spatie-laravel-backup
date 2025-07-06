@@ -3,10 +3,12 @@
 namespace ShuvroRoy\FilamentSpatieLaravelBackup;
 
 use Livewire\Livewire;
+use Filament\Support\Assets\Css;
+use Spatie\LaravelPackageTools\Package;
+use Filament\Support\Facades\FilamentAsset;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationListRecords;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationStatusListRecords;
-use Spatie\LaravelPackageTools\Package;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 class FilamentSpatieLaravelBackupServiceProvider extends PackageServiceProvider
 {
@@ -22,5 +24,9 @@ class FilamentSpatieLaravelBackupServiceProvider extends PackageServiceProvider
     {
         Livewire::component('backup-destination-list-records', BackupDestinationListRecords::class);
         Livewire::component('backup-destination-status-list-records', BackupDestinationStatusListRecords::class);
+
+        FilamentAsset::register([
+            Css::make('filament-spatie-backup-styles', __DIR__ . '/../resources/dist/plugin.css')->loadedOnRequest(),
+        ], package: 'filament-spatie-backup');
     }
 }

@@ -12,9 +12,9 @@ use ShuvroRoy\FilamentSpatieLaravelBackup\Jobs\CreateBackupJob;
 
 class Backups extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-cog';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-cog';
 
-    protected static string $view = 'filament-spatie-backup::pages.backups';
+    protected string $view = 'filament-spatie-backup::pages.backups';
 
     public function getHeading(): string | Htmlable
     {
