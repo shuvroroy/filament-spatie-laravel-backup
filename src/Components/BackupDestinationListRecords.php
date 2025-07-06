@@ -68,7 +68,7 @@ class BackupDestinationListRecords extends Component implements HasActions, HasF
                             filled($search),
                             fn (Collection $data): Collection => $data->filter(
                                 fn (array $record): bool => Str::contains(
-                                    Str::lower($record['path'].$record['disk'].$record['date']),
+                                    Str::lower($record['path'] . $record['disk'] . $record['date']),
                                     Str::lower($search),
                                 ),
                             ),
