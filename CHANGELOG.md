@@ -2,6 +2,14 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v3.0.0-beta2 - 2025-07-06
+
+### What's Changed
+
+* Remove `Sushi` dependency and refactor backup and destination component to use table custom data by @lloricode in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/98
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v3.0.0-beta1...v3.0.0-beta2
+
 ## v3.0.0-beta1 - 2025-07-06
 
 ### What's Changed
