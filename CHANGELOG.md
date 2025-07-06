@@ -2,6 +2,23 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v3.0.0-beta1 - 2025-07-06
+
+### What's Changed
+
+* chore(deps): bump dependabot/fetch-metadata from 2.2.0 to 2.3.0 by @dependabot in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/85
+* chore(deps): bump aglipanci/laravel-pint-action from 2.4 to 2.5 by @dependabot in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/86
+* Use sushi version 2.5 for Laravel 12 support by @DariusIII in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/89
+* chore(deps): bump dependabot/fetch-metadata from 2.3.0 to 2.4.0 by @dependabot in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/91
+* Upgrade to filament v4 by @dododedodonl in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/96
+
+### New Contributors
+
+* @DariusIII made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/89
+* @dododedodonl made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/96
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v2.2.4...v3.0.0-beta1
+
 ## v1.4.0 - 2025-05-15
 
 ### What's Changed
