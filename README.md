@@ -103,6 +103,64 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
+## Permissions Setup (for Downloading & Deleting backups)
+
+If you're using [Spatie Laravel Permission](https://spatie.be/docs/laravel-permission) or [Filament Shield](https://github.com/bezhansalleh/filament-shield), you need to manually define the permissions used by this backup panel.
+
+### Required Permissions
+
+- `download-backup` – Allows downloading existing backups.
+- `delete-backup` – Allows deleting backups from the panel.
+
+### Seeder Example
+
+You can create a seeder to register these permissions and assign them to a role:
+
+```php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+
+class BackupPermissionSeeder extends Seeder
+{
+    public function run(): void
+    {
+        // Create permissions
+        $permissions = [
+            'download-backup',
+            'delete-backup',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
+
+        // Assign to a role (optional)
+        $role = Role::firstOrCreate(['name' => 'backup']);
+        $role->givePermissionTo($permissions);
+
+        // Assign role to a user (optional)
+        $user = \App\Models\User::find(1); // Change ID as needed
+        
+        if ($user && !$user->hasRole('backup')) {
+            $user->assignRole('backup');
+        }
+    }
+}
+```
+
+Run the seeder using:
+
+```bash
+php artisan db:seed --class=BackupPermissionSeeder
+```
+
+After this, users with the `backup` role will have full access to the backup panel.
+
+
 ## Customising the polling interval
 
 You can customise the polling interval for the `Backups` by following the steps below:
