@@ -21,7 +21,7 @@ class Backups extends Page
         return __('filament-spatie-backup::backup.pages.backups.heading');
     }
 
-    public static function getNavigationGroup(): ?string
+    public static function getNavigationGroup(): string | \UnitEnum | null
     {
         return __('filament-spatie-backup::backup.pages.backups.navigation.group');
     }
