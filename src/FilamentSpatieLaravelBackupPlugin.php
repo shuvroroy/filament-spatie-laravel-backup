@@ -7,6 +7,7 @@ use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Filament\Support\Concerns\EvaluatesClosures;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups;
+use function __;
 
 class FilamentSpatieLaravelBackupPlugin implements Plugin
 {
@@ -23,6 +24,10 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
     protected bool $hasStatusListRecordsTable = true;
 
     protected ?int $timeout = null;
+    private Closure|string $navigationIcon;
+    private string|Closure|null $navigationLabel = null;
+    private Closure|string|null $navigationGroup = null;
+    private Closure|int $navigationSort = 1;
 
     public function register(Panel $panel): void
     {
@@ -137,5 +142,64 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
     public function hasStatusListRecordsTable(): bool
     {
         return $this->hasStatusListRecordsTable;
+    }
+
+    public function getHeading(): string
+    {
+        return __('filament-spatie-backup::backup.pages.backups.heading');
+    }
+    public function navigationGroup(string | Closure | null $navigationGroup): static
+    {
+        $this->navigationGroup = $navigationGroup;
+        $this->navigationGroupSet = true;
+
+        return $this;
+    }
+
+    public function getNavigationGroup(): ?string
+    {
+        $navigationGroup = $this->evaluate($this->navigationGroup);
+
+        if ($navigationGroup === null && $this->navigationGroupSet === false) {
+            return __('filament-spatie-backup::backup.pages.navigation.group');
+        }
+
+        return $navigationGroup;
+    }
+
+    public function navigationSort(int | Closure $navigationSort): static
+    {
+        $this->navigationSort = $navigationSort;
+
+        return $this;
+    }
+
+    public function getNavigationSort(): int
+    {
+        return $this->evaluate($this->navigationSort);
+    }
+
+    public function navigationIcon(string | Closure $navigationIcon): static
+    {
+        $this->navigationIcon = $navigationIcon;
+
+        return $this;
+    }
+
+    public function getNavigationIcon(): string
+    {
+        return $this->evaluate($this->navigationIcon) ?? 'heroicon-o-cog';
+    }
+
+    public function navigationLabel(string | Closure | null $navigationLabel): static
+    {
+        $this->navigationLabel = $navigationLabel;
+
+        return $this;
+    }
+
+    public function getNavigationLabel(): string
+    {
+        return $this->evaluate($this->navigationLabel) ?? __('filament-spatie-backup::backup.pages.backups.navigation.label');
     }
 }
