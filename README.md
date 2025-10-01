@@ -5,7 +5,7 @@
 [![Total Downloads](https://poser.pugx.org/shuvroroy/filament-spatie-laravel-backup/downloads)](https://packagist.org/packages/shuvroroy/filament-spatie-laravel-backup)
 [![License](https://poser.pugx.org/shuvroroy/filament-spatie-laravel-backup/license)](https://packagist.org/packages/shuvroroy/filament-spatie-laravel-backup)
 
-This package provides a Filament page that you can create backup of your application. You'll find installation instructions and full documentation on [spatie/laravel-backup](https://spatie.be/docs/laravel-backup/v7/introduction).
+This package provides a Filament page that you can create backup of your application. You'll find installation instructions and full documentation on [spatie/laravel-backup](https://spatie.be/docs/laravel-backup/v8/introduction).
 
 <img width="1481" alt="Screenshot 2023-08-05 at 2 42 10 PM" src="https://github.com/shuvroroy/filament-spatie-laravel-backup/assets/21066418/68fe1c0b-a130-41ce-8c7f-e5182d743225">
 
