@@ -1,11 +1,8 @@
 <x-filament-panels::page>
-    <div
-        x-data="{}"
-        x-load-css="[@js(\Filament\Support\Facades\FilamentAsset::getStyleHref('filament-spatie-backup-styles', package: 'filament-spatie-backup'))]"
-    >
-        <div class="flex flex-col gap-y-8">
-            @if($this->shouldDisplayStatusListRecords())
-                <div class="mb-8">
+    <div x-data="{}" x-load-css="[@js(\Filament\Support\Facades\FilamentAsset::getStyleHref('filament-spatie-backup-styles', package: 'filament-spatie-backup'))]">
+        <div class="flex flex-col gap-y-8 filament-spatie-backup">
+            @if ($this->shouldDisplayStatusListRecords())
+                <div class="mb-10">
                     @livewire(ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationStatusListRecords::class)
                 </div>
             @endif
@@ -18,8 +15,8 @@
                     <h3 class="text-xl">{{ __('filament-spatie-backup::backup.pages.backups.modal.label') }}</h3>
                 </x-slot>
 
-                <x-slot name="footer" >
-                    <div class="flex gap-x-2">
+                <x-slot name="footer">
+                    <div class="flex gap-x-2 justify-between">
                         <x-filament::button wire:click="create('only-db')" color="primary" class="w-full">
                             {{ __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_db') }}
                         </x-filament::button>

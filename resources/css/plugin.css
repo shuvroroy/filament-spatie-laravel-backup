@@ -1,3 +1,20 @@
-@import 'tailwindcss';
-
-@source '../views/**/*.blade.php';
+.filament-spatie-backup {
+    .flex {
+        display: flex;
+    }
+    .justify-between {
+        justify-content: space-between;
+    }
+    .mb-10 {
+        margin-bottom: 2.5rem;
+    }
+    .gap-x-2 {
+        column-gap: 0.5rem;
+    }
+    .gap-y-8 {
+        row-gap: 2rem;
+    }
+    .w-full {
+        width: 100%;
+    }
+}

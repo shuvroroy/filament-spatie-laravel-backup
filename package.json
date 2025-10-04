@@ -1,13 +1,12 @@
 {
-    "private": true,
-    "devDependencies": {
-        "@tailwindcss/cli": "^4.1.10",
-        "@tailwindcss/postcss": "^4.1.10",
-        "tailwindcss": "^4.1.10"
-    },
-    "scripts": {
-        "dev": "npx @tailwindcss/cli -i ./resources/css/plugin.css -o ./resources/dist/plugin.css --watch",
-        "watch": "npx @tailwindcss/cli -i ./resources/css/plugin.css -o ./resources/dist/plugin.css --watch",
-        "prod": "npx @tailwindcss/cli -i ./resources/css/plugin.css -o ./resources/dist/plugin.css --minify"
-    }
+  "private": true,
+  "scripts": {
+    "build": "postcss resources/css/plugin.css -o resources/dist/plugin.css"
+  },
+  "devDependencies": {
+    "cssnano": "^6.0.1",
+    "postcss": "^8.4.27",
+    "postcss-cli": "^10.1.0",
+    "postcss-nesting": "^12.0.0"
+  }
 }
