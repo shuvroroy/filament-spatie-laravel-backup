@@ -103,7 +103,7 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
-## Permissions Setup (for Downloading & Deleting backups)
+## Permissions Setup (for Creating, Downloading & Deleting backups)
 
 If you're using [Spatie Laravel Permission](https://spatie.be/docs/laravel-permission) or [Filament Shield](https://github.com/bezhansalleh/filament-shield), you need to manually define the permissions used by this backup panel.
 
@@ -111,6 +111,7 @@ If you're using [Spatie Laravel Permission](https://spatie.be/docs/laravel-permi
 
 - `download-backup` – Allows downloading existing backups.
 - `delete-backup` – Allows deleting backups from the panel.
+- `create-backup` – Allows creating new backups from the panel.
 
 ### Seeder Example
 
@@ -132,6 +133,7 @@ class BackupPermissionSeeder extends Seeder
         $permissions = [
             'download-backup',
             'delete-backup',
+            'create-backup',
         ];
 
         foreach ($permissions as $permission) {
