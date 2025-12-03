@@ -60,11 +60,12 @@ If you want to override the default `Backups` page icon, heading then you can ex
 
 namespace App\Filament\Pages;
 
+use Illuminate\Contracts\Support\Htmlable;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups as BaseBackups;
 
 class Backups extends BaseBackups
 {
-    protected static ?string $navigationIcon = 'heroicon-o-cpu-chip';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-cpu-chip';
 
     public function getHeading(): string | Htmlable
     {
