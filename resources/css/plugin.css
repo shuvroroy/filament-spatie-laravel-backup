@@ -1,20 +1,21 @@
-.filament-spatie-backup {
-    .flex {
-        display: flex;
-    }
-    .justify-between {
-        justify-content: space-between;
-    }
-    .mb-10 {
-        margin-bottom: 2.5rem;
-    }
-    .gap-x-2 {
-        column-gap: 0.5rem;
-    }
-    .gap-y-8 {
-        row-gap: 2rem;
-    }
-    .w-full {
-        width: 100%;
-    }
+.fsb-flex {
+    display: flex;
+}
+.fsb-flex-col {
+    flex-direction: column;
+}
+.fsb-justify-between {
+    justify-content: space-between;
+}
+.fsb-mb-10 {
+    margin-bottom: 2.5rem;
+}
+.fsb-gap-x-2 {
+    column-gap: 0.5rem;
+}
+.fsb-gap-y-8 {
+    row-gap: 2rem;
+}
+.fsb-w-full {
+    width: 100%;
 }
