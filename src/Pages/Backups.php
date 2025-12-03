@@ -37,7 +37,8 @@ class Backups extends Page
             Action::make('Create Backup')
                 ->button()
                 ->label(__('filament-spatie-backup::backup.pages.backups.actions.create_backup'))
-                ->action('openOptionModal'),
+                ->action('openOptionModal')
+                ->visible(auth()->user()->can('create-backup')),
         ];
     }
 
