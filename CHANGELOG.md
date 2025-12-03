@@ -2,6 +2,20 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v3.2.0 - 2025-12-03
+
+### What's Changed
+
+* chore(deps): bump stefanzweifel/git-auto-commit-action from 6 to 7 by @dependabot[bot] in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/107
+* [Bug]: Tables aren't stacked by @shuvroroy in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/111
+* Feature: Create backup permission by @mefenlon in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/109
+
+### New Contributors
+
+* @mefenlon made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/109
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v3.1.0...v3.2.0
+
 ## v3.1.0 - 2025-10-04
 
 **Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v3.0.0...v3.1.0
