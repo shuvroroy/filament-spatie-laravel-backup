@@ -2,6 +2,16 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v3.3.0 - 2026-01-17
+
+### What's Changed
+
+* chore(deps): bump actions/checkout from 5 to 6 by @dependabot[bot] in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/108
+* chore(deps): bump dependabot/fetch-metadata from 2.4.0 to 2.5.0 by @dependabot[bot] in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/112
+* chore: add support for filament 5 by @arthurpar06 in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/113
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v3.2.0...v3.3.0
+
 ## v3.2.0 - 2025-12-03
 
 ### What's Changed
