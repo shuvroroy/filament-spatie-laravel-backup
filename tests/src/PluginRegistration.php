@@ -6,7 +6,7 @@ use Filament\Facades\Filament;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups;
 
-it('passes smoke test', function () {
+it('can register plugin', function () {
     $panel = Filament::getCurrentOrDefaultPanel();
 
     $panel->plugins([
