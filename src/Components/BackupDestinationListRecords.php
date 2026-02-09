@@ -51,7 +51,7 @@ class BackupDestinationListRecords extends Component implements HasActions, HasF
             ->records(
                 function (
                     int $page,
-                    int|string $recordsPerPage,
+                    int | string $recordsPerPage,
                     ?string $sortColumn,
                     ?string $sortDirection,
                     ?string $search,
