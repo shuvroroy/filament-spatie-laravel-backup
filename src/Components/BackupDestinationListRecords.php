@@ -14,6 +14,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -48,14 +49,25 @@ class BackupDestinationListRecords extends Component implements HasActions, HasF
     {
         return $table
             ->records(
-                function (?string $sortColumn, ?string $sortDirection, ?string $search) {
+                function (
+                    int $page,
+                    int|string $recordsPerPage,
+                    ?string $sortColumn,
+                    ?string $sortDirection,
+                    ?string $search,
+                    array $filters,
+                ): LengthAwarePaginator {
                     $data = [];
 
                     foreach (FilamentSpatieLaravelBackup::getDisks() as $disk) {
                         $data = array_merge($data, FilamentSpatieLaravelBackup::getBackupDestinationData($disk));
                     }
 
-                    return collect($data)
+                    $records = collect($data)
+                        ->when(
+                            filled($selectedDisk = $filters['disk']['value'] ?? null),
+                            fn (Collection $data): Collection => $data->where('disk', $selectedDisk),
+                        )
                         ->when(
                             filled($sortColumn),
                             fn (Collection $data): Collection => $data->sortBy(
@@ -73,6 +85,19 @@ class BackupDestinationListRecords extends Component implements HasActions, HasF
                                 ),
                             ),
                         );
+
+                    $total = $records->count();
+
+                    if ($recordsPerPage === 'all') {
+                        $recordsPerPage = max($total, 1);
+                    }
+
+                    return new LengthAwarePaginator(
+                        items: $records->forPage($page, $recordsPerPage),
+                        total: $total,
+                        perPage: $recordsPerPage,
+                        currentPage: $page,
+                    );
                 }
             )
             ->columns([
