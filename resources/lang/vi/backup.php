@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => 'Ổ đĩa',
+                    'type' => 'Loại sao lưu',
                 ],
             ],
         ],
@@ -32,6 +33,7 @@ return [
                     'amount' => 'Số lượng',
                     'newest' => 'Mới nhất',
                     'used_storage' => 'Bộ nhớ đã dùng',
+                    'no_backups_present' => 'Không có bản sao lưu',
                 ],
             ],
         ],

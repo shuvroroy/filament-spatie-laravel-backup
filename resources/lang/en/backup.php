@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => 'Disk',
+                    'type' => 'Backup Type',
                 ],
             ],
         ],
@@ -32,6 +33,7 @@ return [
                     'amount' => 'Amount',
                     'newest' => 'Newest',
                     'used_storage' => 'Used Storage',
+                    'no_backups_present' => 'No backups present',
                 ],
             ],
         ],

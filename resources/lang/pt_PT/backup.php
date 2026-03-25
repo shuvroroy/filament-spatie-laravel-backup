@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => 'Disco',
+                    'type' => 'Tipo de cópia de segurança',
                 ],
             ],
         ],
@@ -32,6 +33,7 @@ return [
                     'amount' => 'Quantidade',
                     'newest' => 'Recente',
                     'used_storage' => 'Espaço Utilizado',
+                    'no_backups_present' => 'Sem cópias de segurança',
                 ],
             ],
         ],

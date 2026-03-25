@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => 'Disk',
+                    'type' => 'Back-up type',
                 ],
             ],
         ],
@@ -32,6 +33,7 @@ return [
                     'amount' => 'Aantal',
                     'newest' => 'Laatste',
                     'used_storage' => 'Gebruikte opslag',
+                    'no_backups_present' => 'Geen back-ups aanwezig',
                 ],
             ],
         ],

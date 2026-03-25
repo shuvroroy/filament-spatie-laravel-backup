@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => '디스크',
+                    'type' => '백업 유형',
                 ],
             ],
         ],
@@ -32,6 +33,7 @@ return [
                     'amount' => '개수',
                     'newest' => '최신',
                     'used_storage' => '사용된 저장소',
+                    'no_backups_present' => '백업이 없습니다',
                 ],
             ],
         ],

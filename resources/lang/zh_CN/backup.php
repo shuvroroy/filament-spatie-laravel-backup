@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => '磁盘',
+                    'type' => '备份类型',
                 ],
             ],
         ],
@@ -32,6 +33,7 @@ return [
                     'amount' => '大小',
                     'newest' => '最新备份',
                     'used_storage' => '占用空间',
+                    'no_backups_present' => '没有备份',
                 ],
             ],
         ],
