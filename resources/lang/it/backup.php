@@ -32,6 +32,7 @@ return [
                     'amount' => 'Quantità',
                     'newest' => 'Più recente',
                     'used_storage' => 'Storage Utilizzato',
+                    'no_backups_present' => 'Nessun backup presente',
                 ],
             ],
         ],

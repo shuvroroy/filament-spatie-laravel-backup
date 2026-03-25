@@ -32,6 +32,7 @@ return [
                     'amount' => 'السعة',
                     'newest' => 'الأحدث',
                     'used_storage' => 'السعة المستخدمة',
+                    'no_backups_present' => 'لا توجد نسخ احتياطية',
                 ],
             ],
         ],

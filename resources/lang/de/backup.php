@@ -32,6 +32,7 @@ return [
                     'amount' => 'Anzahl',
                     'newest' => 'Neuestes',
                     'used_storage' => 'Verwendeter Speicher',
+                    'no_backups_present' => 'Keine Sicherungen vorhanden',
                 ],
             ],
         ],
