@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => 'Disque',
+                    'type' => 'Type de sauvegarde',
                 ],
             ],
         ],

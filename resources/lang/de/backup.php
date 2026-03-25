@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => 'Speicher',
+                    'type' => 'Backup-Typ',
                 ],
             ],
         ],

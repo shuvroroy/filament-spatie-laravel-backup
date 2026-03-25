@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => '磁盘',
+                    'type' => '备份类型',
                 ],
             ],
         ],

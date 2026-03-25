@@ -44,12 +44,37 @@ class FilamentSpatieLaravelBackup
                     return [
                         'disk' => $disk,
                         'path' => $backup->path(),
+                        'type' => static::detectBackupType($disk, $backup->path()),
                         'date' => $backup->date()->format('Y-m-d H:i:s'),
                         'size' => Format::humanReadableSize($backup->sizeInBytes()),
                     ];
                 })
                 ->toArray();
         });
+    }
+
+    public static function detectBackupType(string $disk, string $path): string
+    {
+        $filename = basename($path);
+
+        if (str_contains($filename, 'only-db')) {
+            return 'only-db';
+        }
+
+        if (str_contains($filename, 'only-files')) {
+            return 'only-files';
+        }
+
+        return 'db-and-files';
+    }
+
+    public static function getFilterTypes(): array
+    {
+        return [
+            'only-db' => __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_db'),
+            'only-files' => __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_files'),
+            'db-and-files' => __('filament-spatie-backup::backup.pages.backups.modal.buttons.db_and_files'),
+        ];
     }
 
     public static function getBackupDestinationStatusData(): array
