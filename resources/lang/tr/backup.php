@@ -32,6 +32,7 @@ return [
                     'amount' => 'Adet',
                     'newest' => 'Zaman',
                     'used_storage' => 'Kullanılan Depolama',
+                    'no_backups_present' => 'Yedek bulunmuyor',
                 ],
             ],
         ],

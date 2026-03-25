@@ -70,7 +70,7 @@ class FilamentSpatieLaravelBackup
                         'amount' => $backupDestinationStatus->backupDestination()->backups()->count(),
                         'newest' => $backupDestinationStatus->backupDestination()->newestBackup()
                             ? $backupDestinationStatus->backupDestination()->newestBackup()->date()->diffForHumans()
-                            : __('No backups present'),
+                            : __('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.no_backups_present'),
                         'usedStorage' => Format::humanReadableSize($backupDestinationStatus->backupDestination()->usedStorage()),
                     ];
                 })
