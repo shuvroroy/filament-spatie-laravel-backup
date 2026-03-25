@@ -24,7 +24,7 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 
     protected ?int $timeout = null;
 
-    protected Closure | string $navigationIcon = 'heroicon-o-cog';
+    protected Closure | string | \BackedEnum $navigationIcon = 'heroicon-o-cog';
 
     protected string | Closure | null $navigationLabel = null;
 
@@ -185,7 +185,7 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
         return $this->evaluate($this->navigationSort);
     }
 
-    public function navigationIcon(string | Closure $navigationIcon): static
+    public function navigationIcon(string | \BackedEnum | Closure $navigationIcon): static
     {
         $this->navigationIcon = $navigationIcon;
 
@@ -194,7 +194,9 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 
     public function getNavigationIcon(): string | null
     {
-        return $this->evaluate($this->navigationIcon);
+        $icon = $this->evaluate($this->navigationIcon);
+
+        return $icon instanceof \BackedEnum ? $icon->value : $icon;
     }
 
     public function navigationLabel(string | Closure | null $navigationLabel): static
