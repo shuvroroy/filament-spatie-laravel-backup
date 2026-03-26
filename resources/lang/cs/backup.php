@@ -32,6 +32,7 @@ return [
                     'amount' => 'Počet',
                     'newest' => 'Nejnovější',
                     'used_storage' => 'Využité místo',
+                    'no_backups_present' => 'Žádné zálohy nejsou k dispozici',
                 ],
             ],
         ],

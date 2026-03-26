@@ -32,6 +32,7 @@ return [
                     'amount' => '개수',
                     'newest' => '최신',
                     'used_storage' => '사용된 저장소',
+                    'no_backups_present' => '백업이 없습니다',
                 ],
             ],
         ],

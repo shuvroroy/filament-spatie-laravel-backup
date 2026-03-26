@@ -164,6 +164,46 @@ php artisan db:seed --class=BackupPermissionSeeder
 After this, users with the `backup` role will have full access to the backup panel.
 
 
+## Customising navigation
+
+You can customise the navigation icon, label, group, and sort order directly on the plugin without extending the page class:
+
+```php
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Panel;
+use Filament\PanelProvider;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            // ...
+            ->plugin(
+                FilamentSpatieLaravelBackupPlugin::make()
+                    ->navigationIcon('heroicon-o-cpu-chip')
+                    ->navigationLabel('Backups')
+                    ->navigationGroup('Settings')
+                    ->navigationSort(3)
+            );
+    }
+}
+```
+
+All navigation methods also accept closures for dynamic values:
+
+```php
+FilamentSpatieLaravelBackupPlugin::make()
+    ->navigationLabel(fn (): string => __('custom.backups'))
+    ->navigationGroup(fn (): ?string => auth()->user()->isAdmin() ? 'Admin' : 'Tools')
+```
+
+Pass `null` to `navigationGroup()` to remove the page from any navigation group.
+
 ## Customising the polling interval
 
 You can customise the polling interval for the `Backups` by following the steps below:

@@ -12,23 +12,31 @@ use ShuvroRoy\FilamentSpatieLaravelBackup\Jobs\CreateBackupJob;
 
 class Backups extends Page
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-cog';
-
     protected string $view = 'filament-spatie-backup::pages.backups';
 
     public function getHeading(): string | Htmlable
     {
-        return __('filament-spatie-backup::backup.pages.backups.heading');
+        return FilamentSpatieLaravelBackupPlugin::get()->getHeading();
     }
 
     public static function getNavigationGroup(): string | \UnitEnum | null
     {
-        return __('filament-spatie-backup::backup.pages.backups.navigation.group');
+        return FilamentSpatieLaravelBackupPlugin::get()->getNavigationGroup();
     }
 
     public static function getNavigationLabel(): string
     {
-        return __('filament-spatie-backup::backup.pages.backups.navigation.label');
+        return FilamentSpatieLaravelBackupPlugin::get()->getNavigationLabel();
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return FilamentSpatieLaravelBackupPlugin::get()->getNavigationSort();
+    }
+
+    public static function getNavigationIcon(): string | \BackedEnum | null
+    {
+        return FilamentSpatieLaravelBackupPlugin::get()->getNavigationIcon();
     }
 
     protected function getActions(): array

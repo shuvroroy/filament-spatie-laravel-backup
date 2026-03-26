@@ -32,6 +32,7 @@ return [
                     'amount' => 'Jumlah',
                     'newest' => 'Terbaru',
                     'used_storage' => 'Penyimpanan Terpakai',
+                    'no_backups_present' => 'Tidak ada cadangan',
                 ],
             ],
         ],
