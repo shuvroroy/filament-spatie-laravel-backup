@@ -162,7 +162,7 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
         return $this;
     }
 
-    public function getNavigationGroup(): string | null
+    public function getNavigationGroup(): ?string
     {
         $navigationGroup = $this->evaluate($this->navigationGroup);
 
@@ -192,7 +192,7 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
         return $this;
     }
 
-    public function getNavigationIcon(): string | null
+    public function getNavigationIcon(): ?string
     {
         $icon = $this->evaluate($this->navigationIcon);
 
