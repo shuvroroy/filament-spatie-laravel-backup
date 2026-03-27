@@ -2,6 +2,21 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v3.4.0 - 2026-03-27
+
+### What's Changed
+
+* add more configurability: icon, label, navigationGroup by @grafst in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/105
+* chore(deps): bump ramsey/composer-install from 3 to 4 by @dependabot[bot] in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/115
+* chore(deps): add Laravel 13 compatibility (spatie/laravel-backup ^10.0) by @inerba in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/116
+
+### New Contributors
+
+* @grafst made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/105
+* @inerba made their first contribution in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/116
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v3.3.0...v3.4.0
+
 ## v3.3.0 - 2026-01-17
 
 ### What's Changed
