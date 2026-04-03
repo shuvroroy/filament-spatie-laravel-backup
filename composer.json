@@ -41,7 +41,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "ShuvroRoy\\FilamentSpatieLaravelBackup\\Tests\\": "tests"
+            "ShuvroRoy\\FilamentSpatieLaravelBackup\\Tests\\": "tests/src"
         }
     },
     "scripts": {
