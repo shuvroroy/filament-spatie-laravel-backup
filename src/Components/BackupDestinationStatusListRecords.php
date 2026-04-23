@@ -67,6 +67,6 @@ class BackupDestinationStatusListRecords extends Component implements HasActions
         /** @var FilamentSpatieLaravelBackupPlugin $plugin */
         $plugin = filament()->getPlugin('filament-spatie-backup');
 
-        return $plugin->getPolingInterval();
+        return $plugin->getPollingInterval();
     }
 }
