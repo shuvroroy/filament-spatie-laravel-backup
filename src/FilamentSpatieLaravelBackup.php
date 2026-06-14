@@ -44,7 +44,7 @@ class FilamentSpatieLaravelBackup
                     return [
                         'disk' => $disk,
                         'path' => $backup->path(),
-                        'date' => $backup->date()->format('Y-m-d H:i:s'),
+                        'date' => $backup->date()->setTimezone(config('app.timezone'))->format('Y-m-d H:i:s'),
                         'size' => Format::humanReadableSize($backup->sizeInBytes()),
                     ];
                 })
