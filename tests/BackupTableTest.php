@@ -59,11 +59,31 @@ it('applies the disk filter to custom backup data', function () {
         ->and(collect($records->items())->pluck('disk')->unique()->all())->toBe(['archive']);
 });
 
+it('searches sorts and returns all matching custom records', function () {
+    $records = backupTableRecords(
+        FilamentSpatieLaravelBackupPlugin::make()->cacheDuration(0),
+        page: 0,
+        recordsPerPage: 'all',
+        filters: ['disk' => ['value' => 'not-configured']],
+        sortColumn: 'path',
+        sortDirection: 'asc',
+        search: 'archive',
+    );
+
+    expect($records->currentPage())->toBe(1)
+        ->and($records->total())->toBe(5)
+        ->and($records->perPage())->toBe(5)
+        ->and($records->items()[0]['path'])->toBe('test-app/2026-08-21-00-00-00.zip');
+});
+
 function backupTableRecords(
     FilamentSpatieLaravelBackupPlugin $plugin,
     int $page = 1,
-    int $recordsPerPage = 10,
+    int | string | null $recordsPerPage = 10,
     array $filters = [],
+    ?string $sortColumn = null,
+    ?string $sortDirection = null,
+    ?string $search = null,
 ): LengthAwarePaginator {
     $panel = Panel::make()
         ->id('test')
@@ -74,9 +94,9 @@ function backupTableRecords(
     $component = app(BackupDestinationListRecords::class);
     $table = $component->table(Table::make($component));
     $records = $table->getDataSource()(
-        null,
-        null,
-        null,
+        $sortColumn,
+        $sortDirection,
+        $search,
         $filters,
         $page,
         $recordsPerPage,

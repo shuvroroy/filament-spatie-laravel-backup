@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Enums\Option;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Jobs\CreateBackupJob;
 use Spatie\Backup\Commands\BackupCommand;
@@ -38,3 +40,21 @@ it('fails the queued job when the backup command fails', function () {
 
     (new CreateBackupJob)->handle();
 })->throws(RuntimeException::class, 'The backup command failed with exit code 1.');
+
+it('reports cache invalidation failures without repeating a successful backup', function () {
+    $artisan = Mockery::mock(Kernel::class);
+    $artisan->shouldReceive('call')->once()->andReturn(0);
+    Artisan::swap($artisan);
+
+    $exception = new RuntimeException('Cache is unavailable.');
+    Cache::shouldReceive('forget')
+        ->once()
+        ->with('backup-statuses')
+        ->andThrow($exception);
+
+    $handler = Mockery::mock(ExceptionHandler::class);
+    $handler->shouldReceive('report')->once()->with($exception);
+    app()->instance(ExceptionHandler::class, $handler);
+
+    (new CreateBackupJob)->handle();
+});

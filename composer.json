@@ -25,10 +25,10 @@
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.0",
         "nunomaduro/collision": "^8.1.1||^7.10.0",
-        "orchestra/testbench": "^9.0||^10.0",
-        "pestphp/pest": "^2.0||^3.0",
-        "pestphp/pest-plugin-arch": "^2.0||^3.0",
-        "pestphp/pest-plugin-laravel": "^2.0||^3.0",
+        "orchestra/testbench": "^9.0||^10.0||^11.0",
+        "pestphp/pest": "^2.0||^3.0||^4.0",
+        "pestphp/pest-plugin-arch": "^2.0||^3.0||^4.0",
+        "pestphp/pest-plugin-laravel": "^2.0||^3.0||^4.0",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-deprecation-rules": "^2.0",
@@ -47,6 +47,7 @@
     "scripts": {
         "analyse": "vendor/bin/phpstan analyse",
         "test": "vendor/bin/pest",
+        "test:coverage": "vendor/bin/pest --coverage --min=100",
         "format": "vendor/bin/pint"
     },
     "config": {
@@ -63,6 +64,6 @@
             ]
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }

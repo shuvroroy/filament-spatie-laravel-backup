@@ -1,6 +1,7 @@
 <?php
 
 use Carbon\Carbon;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -8,8 +9,22 @@ use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemOperator;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackup;
+use ShuvroRoy\FilamentSpatieLaravelBackup\Support\CachedBackupDestination;
+use Spatie\Backup\BackupDestination\BackupCollection;
+use Spatie\Backup\BackupDestination\BackupDestination;
+use Spatie\Backup\Tasks\Monitor\HealthCheck;
 use Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays;
 use Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumStorageInMegabytes;
+
+class ConfigurablePassingHealthCheck extends HealthCheck
+{
+    public function __construct(protected bool $passes) {}
+
+    public function checkHealth(BackupDestination $backupDestination): void
+    {
+        $this->failUnless($this->passes, 'The configured health check failed.');
+    }
+}
 
 beforeEach(function () {
     config()->set('app.timezone', 'UTC');
@@ -30,6 +45,7 @@ it('uses directory listing metadata instead of one request per backup', function
     $listing = new DirectoryListing([
         new FileAttributes('test-app/2026-08-23-00-00-00.zip', 100, lastModified: 1_777_075_200),
         new FileAttributes('test-app/2026-08-24-00-00-00.zip', 200, lastModified: 1_777_161_600),
+        new FileAttributes('test-app/custom.backup', 300, lastModified: 1_777_248_000, mimeType: 'application/zip'),
         new FileAttributes('test-app/readme.txt', 50, lastModified: 1_777_161_600),
     ]);
 
@@ -42,10 +58,49 @@ it('uses directory listing metadata instead of one request per backup', function
 
     $records = FilamentSpatieLaravelBackup::getBackupDestinationData('remote', cacheDuration: 0);
 
-    expect($records)->toHaveCount(2)
+    expect($records)->toHaveCount(3)
         ->and($records[0]['path'])->toBe('test-app/2026-08-24-00-00-00.zip')
-        ->and($records[0]['size'])->toBe('200 B')
-        ->and($records[1]['path'])->toBe('test-app/2026-08-23-00-00-00.zip');
+        ->and($records[1]['path'])->toBe('test-app/2026-08-23-00-00-00.zip')
+        ->and($records[2]['path'])->toBe('test-app/custom.backup')
+        ->and($records[2]['size'])->toBe('300 B');
+});
+
+it('falls back to filesystem methods when directory metadata is unavailable', function () {
+    $filesystem = Mockery::mock(Filesystem::class);
+
+    Storage::shouldReceive('disk')->once()->with('legacy')->andReturn($filesystem);
+    $filesystem->shouldReceive('allFiles')
+        ->once()
+        ->with('test-app')
+        ->andReturn(['test-app/custom-name.zip', 'test-app/readme.txt']);
+    $filesystem->shouldReceive('lastModified')
+        ->once()
+        ->with('test-app/custom-name.zip')
+        ->andReturn(1_777_248_000);
+    $filesystem->shouldReceive('size')
+        ->once()
+        ->with('test-app/custom-name.zip')
+        ->andReturn(512);
+
+    $records = FilamentSpatieLaravelBackup::getBackupDestinationData('legacy', cacheDuration: 0);
+
+    expect($records)->toHaveCount(1)
+        ->and($records[0]['path'])->toBe('test-app/custom-name.zip')
+        ->and($records[0]['size'])->toBe('512 B');
+});
+
+it('resolves disk filters and labels from the request and configuration', function () {
+    config()->set('backup.backup.destination.disks', ['backups', 'cold-storage']);
+
+    expect(FilamentSpatieLaravelBackup::getDisk())->toBe('backups')
+        ->and(FilamentSpatieLaravelBackup::getFilterDisks())->toBe([
+            'backups' => 'Backups',
+            'cold-storage' => 'Cold-storage',
+        ]);
+
+    request()->merge(['tableFilters' => ['disk' => ['value' => 'cold-storage']]]);
+
+    expect(FilamentSpatieLaravelBackup::getDisk())->toBe('cold-storage');
 });
 
 it('formats backup dates in the application timezone', function () {
@@ -76,6 +131,32 @@ it('shares and invalidates cached backup snapshots', function () {
         ->toHaveCount(2);
 });
 
+it('invalidates every configured and monitored destination cache', function () {
+    config()->set('backup.monitor_backups', [[
+        'name' => 'monitored-app',
+        'disks' => ['archive', 'backups'],
+    ]]);
+
+    $keys = [
+        'filament-spatie-backup:snapshot:' . hash('sha256', "backups\0test-app"),
+        'filament-spatie-backup:snapshot:' . hash('sha256', "archive\0monitored-app"),
+        'filament-spatie-backup:snapshot:' . hash('sha256', "backups\0monitored-app"),
+        'backups-backups',
+        'backups-archive',
+        'backup-statuses',
+    ];
+
+    foreach ($keys as $key) {
+        Cache::put($key, true, 60);
+    }
+
+    FilamentSpatieLaravelBackup::clearCachedBackupDestinationData();
+
+    foreach ($keys as $key) {
+        expect(Cache::has($key))->toBeFalse();
+    }
+});
+
 it('builds destination status without a database or sushi models', function () {
     Storage::fake('backups');
     Storage::disk('backups')->put('test-app/2026-08-24-00-00-00.zip', str_repeat('x', 1_024));
@@ -102,12 +183,42 @@ it('runs configured health checks against cached metadata', function () {
         'name' => 'test-app',
         'disks' => ['backups'],
         'health_checks' => [
+            MaximumAgeInDays::class,
             MaximumAgeInDays::class => 1,
             MaximumStorageInMegabytes::class => 1,
+            ConfigurablePassingHealthCheck::class => ['passes' => true],
         ],
     ]]);
 
     $statuses = FilamentSpatieLaravelBackup::getBackupDestinationStatusData(cacheDuration: 0);
 
     expect($statuses[0]['healthy'])->toBeTrue();
+});
+
+it('reports unreachable destinations without trying to inspect their backups', function () {
+    config()->set('filesystems.disks.broken', ['driver' => 'unsupported']);
+    config()->set('backup.monitor_backups', [[
+        'name' => 'test-app',
+        'disks' => ['broken'],
+        'health_checks' => [],
+    ]]);
+
+    $statuses = FilamentSpatieLaravelBackup::getBackupDestinationStatusData(cacheDuration: 0);
+
+    expect($statuses)->toHaveCount(1)
+        ->and($statuses[0]['reachable'])->toBeFalse()
+        ->and($statuses[0]['healthy'])->toBeFalse()
+        ->and($statuses[0]['amount'])->toBe(0)
+        ->and($statuses[0]['newest'])->toBe('No backups present');
+});
+
+it('uses a default connection error for unreachable cached destinations', function () {
+    $destination = new CachedBackupDestination(null, 'test-app', 'broken');
+
+    $destination->useSnapshot(new BackupCollection, false);
+
+    expect($destination->isReachable())->toBeFalse()
+        ->and($destination->backups())->toBeEmpty()
+        ->and($destination->connectionError?->getMessage())
+        ->toBe('The backup destination is not reachable.');
 });

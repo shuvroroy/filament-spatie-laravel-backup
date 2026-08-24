@@ -7,6 +7,14 @@ use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Jobs\CreateBackupJob;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups;
 
+class TestableBackupsPage extends Backups
+{
+    public function actionsForTesting(): array
+    {
+        return $this->getActions();
+    }
+}
+
 it('dispatches backup jobs immediately to the configured queue', function () {
     Bus::fake();
 
@@ -32,4 +40,48 @@ it('dispatches backup jobs immediately to the configured queue', function () {
         && $job->timeout === 120
     );
     Bus::assertNotDispatchedAfterResponse(CreateBackupJob::class);
+});
+
+it('exposes configured page navigation authorization and actions', function () {
+    $plugin = FilamentSpatieLaravelBackupPlugin::make()
+        ->authorize(false)
+        ->navigationGroup('Operations')
+        ->navigationLabel('Snapshots')
+        ->navigationSort(20)
+        ->navigationIcon('heroicon-o-archive-box')
+        ->statusListRecordsTable(false);
+    $panel = Panel::make()
+        ->default()
+        ->id('test')
+        ->plugin($plugin);
+
+    Filament::registerPanel($panel);
+    Filament::setCurrentPanel($panel);
+
+    $page = app(TestableBackupsPage::class);
+    $actions = $page->actionsForTesting();
+
+    expect($page->getHeading())->toBe('Backups')
+        ->and(Backups::getNavigationGroup())->toBe('Operations')
+        ->and(Backups::getNavigationLabel())->toBe('Snapshots')
+        ->and(Backups::getNavigationSort())->toBe(20)
+        ->and(Backups::getNavigationIcon())->toBe('heroicon-o-archive-box')
+        ->and(Backups::canAccess())->toBeFalse()
+        ->and($page->shouldDisplayStatusListRecords())->toBeFalse()
+        ->and($actions)->toHaveCount(1)
+        ->and($actions[0]->isVisible())->toBeFalse();
+
+    $page->openOptionModal();
+});
+
+it('hides the navigation group when the page belongs to a cluster', function () {
+    $panel = Panel::make()
+        ->default()
+        ->id('clustered')
+        ->plugin(FilamentSpatieLaravelBackupPlugin::make()->cluster('App\\Filament\\Clusters\\System'));
+
+    Filament::registerPanel($panel);
+    Filament::setCurrentPanel($panel);
+
+    expect(Backups::getNavigationGroup())->toBeNull();
 });

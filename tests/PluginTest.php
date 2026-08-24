@@ -5,6 +5,11 @@ use Filament\Panel;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups;
 
+enum TestNavigationIcon: string
+{
+    case Backups = 'heroicon-o-archive-box';
+}
+
 it('configures polling cache queue and backup limits', function () {
     $plugin = FilamentSpatieLaravelBackupPlugin::make()
         ->usingPollingInterval(null)
@@ -73,4 +78,45 @@ it('rejects invalid cache durations and backup limits', function () {
         ->toThrow(InvalidArgumentException::class)
         ->and(fn () => FilamentSpatieLaravelBackupPlugin::make()->timeout(-1))
         ->toThrow(InvalidArgumentException::class);
+});
+
+it('configures authorization page and status table visibility', function () {
+    $plugin = FilamentSpatieLaravelBackupPlugin::make();
+
+    expect($plugin->isAuthorized())->toBeTrue()
+        ->and($plugin->getPage())->toBe(Backups::class)
+        ->and($plugin->hasStatusListRecordsTable())->toBeTrue()
+        ->and($plugin->getHeading())->toBe('Backups');
+
+    $plugin
+        ->authorize(fn (): bool => false)
+        ->usingPage('App\\Filament\\Pages\\CustomBackups')
+        ->statusListRecordsTable(false);
+
+    expect($plugin->isAuthorized())->toBeFalse()
+        ->and($plugin->getPage())->toBe('App\\Filament\\Pages\\CustomBackups')
+        ->and($plugin->hasStatusListRecordsTable())->toBeFalse();
+
+    $plugin->boot(Panel::make()->id('test'));
+});
+
+it('configures navigation defaults values closures and backed enums', function () {
+    $plugin = FilamentSpatieLaravelBackupPlugin::make();
+
+    expect($plugin->getNavigationGroup())->toBe('Settings')
+        ->and($plugin->getNavigationSort())->toBe(1)
+        ->and($plugin->getNavigationIcon())->toBe('heroicon-o-cog')
+        ->and($plugin->getNavigationLabel())->toBe('Backups');
+
+    $plugin
+        ->navigationGroup(fn (): string => 'Operations')
+        ->navigationSort(fn (): int => 25)
+        ->navigationIcon(fn (): TestNavigationIcon => TestNavigationIcon::Backups)
+        ->navigationLabel(fn (): string => 'Snapshots');
+
+    expect($plugin->getNavigationGroup())->toBe('Operations')
+        ->and($plugin->getNavigationSort())->toBe(25)
+        ->and($plugin->getNavigationIcon())->toBe(TestNavigationIcon::Backups->value)
+        ->and($plugin->getNavigationLabel())->toBe('Snapshots')
+        ->and(FilamentSpatieLaravelBackupPlugin::make()->navigationGroup(null)->getNavigationGroup())->toBeNull();
 });
