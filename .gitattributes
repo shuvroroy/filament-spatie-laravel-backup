@@ -14,6 +14,5 @@
 /psalm.xml          export-ignore
 /psalm.xml.dist     export-ignore
 /testbench.yaml     export-ignore
-/UPGRADING.md       export-ignore
+/UPGRADE.md         export-ignore
 /phpstan.neon.dist  export-ignore
-/phpstan-baseline.neon  export-ignore
