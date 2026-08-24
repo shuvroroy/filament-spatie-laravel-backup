@@ -24,7 +24,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest]
-        php: [8.3, 8.4, 8.5]
+        php: [8.2, 8.3, 8.4, 8.5]
         laravel: ['12.*']
         testbench: ['10.*']
         stability: [prefer-stable]
@@ -64,7 +64,7 @@ jobs:
   compatibility:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    name: P8.3 - L12.* - Filament 4.* - Spatie Backup 9.*
+    name: P8.2 - L12.* - Filament 4.* - Spatie Backup 9.*
 
     steps:
       - name: Checkout code
@@ -73,7 +73,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.3
+          php-version: 8.2
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
           coverage: none
 

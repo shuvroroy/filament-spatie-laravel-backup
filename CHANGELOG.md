@@ -12,7 +12,7 @@ All notable changes to `filament-spatie-laravel-backup` will be documented in th
 
 ### Changed
 
-- Raised support to PHP 8.3–8.5, Laravel 12–13, Filament 4–5, and Spatie Laravel Backup 9–10.
+- Updated the supported stack to PHP 8.2–8.5, Laravel 12–13, Filament 4–5, and Spatie Laravel Backup 9–10.
 - Backups are listed newest first, and a selected disk reads only that destination.
 - Backup type markers are recognized only as `only-db-` and `only-files-` filename prefixes. Combined backups consistently use `db-and-files`.
 - The default navigation icon is now `heroicon-o-archive-box-arrow-down`.
