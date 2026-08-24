@@ -3,10 +3,11 @@
 namespace ShuvroRoy\FilamentSpatieLaravelBackup\Pages;
 
 use Filament\Actions\Action;
+use Filament\Clusters\Cluster;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
-use ShuvroRoy\FilamentSpatieLaravelBackup\Enums\Option;
+use ShuvroRoy\FilamentSpatieLaravelBackup\Enums\BackupType;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Jobs\CreateBackupJob;
 
@@ -19,9 +20,10 @@ class Backups extends Page
         return FilamentSpatieLaravelBackupPlugin::get()->getHeading();
     }
 
+    /** @return class-string<Cluster>|null */
     public static function getCluster(): ?string
     {
-        return FilamentSpatieLaravelBackupPlugin::getClusterName();
+        return FilamentSpatieLaravelBackupPlugin::get()->getClusterName();
     }
 
     public static function getNavigationGroup(): string | \UnitEnum | null
@@ -48,14 +50,14 @@ class Backups extends Page
         return FilamentSpatieLaravelBackupPlugin::get()->getNavigationIcon();
     }
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Action::make('Create Backup')
                 ->button()
                 ->label(__('filament-spatie-backup::backup.pages.backups.actions.create_backup'))
                 ->action('openOptionModal')
-                ->visible(auth()->user()->can('create-backup')),
+                ->visible(auth()->user()?->can('create-backup') ?? false),
         ];
     }
 
@@ -64,14 +66,25 @@ class Backups extends Page
         $this->dispatch('open-modal', id: 'backup-option');
     }
 
-    public function create(string $option = ''): void
+    public function create(string $type = BackupType::DATABASE_AND_FILES->value): void
     {
+        $backupType = BackupType::tryFrom($type);
+
+        if ($backupType === null) {
+            Notification::make()
+                ->title(__('filament-spatie-backup::backup.pages.backups.modal.label'))
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         /** @var FilamentSpatieLaravelBackupPlugin $plugin */
         $plugin = filament()->getPlugin('filament-spatie-backup');
 
-        CreateBackupJob::dispatch(Option::from($option), $plugin->getTimeout())
-            ->onQueue($plugin->getQueue())
-            ->afterResponse();
+        CreateBackupJob::dispatch($backupType, $plugin->getTimeout())
+            ->onConnection($plugin->getQueueConnection())
+            ->onQueue($plugin->getQueue());
 
         $this->dispatch('close-modal', id: 'backup-option');
 

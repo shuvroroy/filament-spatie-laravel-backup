@@ -25,7 +25,7 @@
                             {{ __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_files') }}
                         </x-filament::button>
 
-                        <x-filament::button wire:click="create()" color="success" class="fsb-w-full">
+                        <x-filament::button wire:click="create('db-and-files')" color="success" class="fsb-w-full">
                             {{ __('filament-spatie-backup::backup.pages.backups.modal.buttons.db_and_files') }}
                         </x-filament::button>
                     </div>

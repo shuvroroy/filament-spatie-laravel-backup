@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => '磁盘',
+                    'type' => '备份类型',
                 ],
             ],
         ],
@@ -48,7 +49,7 @@ return [
 
             'messages' => [
                 'backup_success' => '在后台创建新备份',
-                'backup_delete_success' => '在后台删除此备份',
+                'backup_delete_success' => '备份已成功删除。',
             ],
 
             'modal' => [

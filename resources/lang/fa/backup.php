@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => 'دیسک',
+                    'type' => 'نوع پشتیبان‌گیری',
                 ],
             ],
         ],
@@ -48,7 +49,7 @@ return [
 
             'messages' => [
                 'backup_success' => 'در حال ایجاد پشتیبان در پس‌زمینه.',
-                'backup_delete_success' => 'در حال حذف این پشتیبان در پس‌زمینه.',
+                'backup_delete_success' => 'پشتیبان با موفقیت حذف شد.',
             ],
 
             'modal' => [

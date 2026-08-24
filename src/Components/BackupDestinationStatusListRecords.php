@@ -11,6 +11,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -25,14 +26,18 @@ class BackupDestinationStatusListRecords extends Component implements HasActions
 
     public function render(): View
     {
-        return view('filament-spatie-backup::components.backup-destination-status-list-records');
+        return app(ViewFactory::class)->make(
+            'filament-spatie-backup::components.backup-destination-status-list-records',
+        );
     }
 
     public function table(Table $table): Table
     {
         return $table
             ->records(
-                fn () => FilamentSpatieLaravelBackup::getBackupDestinationStatusData()
+                fn () => FilamentSpatieLaravelBackup::getBackupDestinationStatusData(
+                    FilamentSpatieLaravelBackupPlugin::get()->getCacheDuration(),
+                )
             )
             ->columns([
                 TextColumn::make('name')
@@ -49,24 +54,15 @@ class BackupDestinationStatusListRecords extends Component implements HasActions
                 TextColumn::make('usedStorage')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.used_storage'))
                     ->badge(),
-            ])
-            ->filters([
-                // ...
-            ])
-            ->recordActions([
-                // ...
-            ])
-            ->toolbarActions([
-                // ...
             ]);
     }
 
     #[Computed]
-    public function interval(): string
+    public function interval(): ?string
     {
         /** @var FilamentSpatieLaravelBackupPlugin $plugin */
         $plugin = filament()->getPlugin('filament-spatie-backup');
 
-        return $plugin->getPolingInterval();
+        return $plugin->getPollingInterval();
     }
 }

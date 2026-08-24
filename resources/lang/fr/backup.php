@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => 'Disque',
+                    'type' => 'Type de sauvegarde',
                 ],
             ],
         ],
@@ -48,6 +49,7 @@ return [
 
             'messages' => [
                 'backup_success' => 'Création d\'une nouvelle sauvegarde en arrière-plan.',
+                'backup_delete_success' => 'La sauvegarde a été supprimée avec succès.',
             ],
 
             'modal' => [

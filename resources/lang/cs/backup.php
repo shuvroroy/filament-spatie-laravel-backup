@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => 'Disk',
+                    'type' => 'Typ zálohy',
                 ],
             ],
         ],
@@ -48,7 +49,7 @@ return [
 
             'messages' => [
                 'backup_success' => 'Nová záloha byla úspěšně vytvořena.',
-                'backup_delete_success' => '"Záloha byla úspěšně odstraněna.',
+                'backup_delete_success' => 'Záloha byla úspěšně odstraněna.',
             ],
 
             'modal' => [

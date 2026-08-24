@@ -8,6 +8,13 @@ on:
       - 'phpunit.xml.dist'
       - 'composer.json'
       - 'composer.lock'
+  pull_request:
+    paths:
+      - '**.php'
+      - '.github/workflows/run-tests.yml'
+      - 'phpunit.xml.dist'
+      - 'composer.json'
+      - 'composer.lock'
 
 jobs:
   test:
@@ -17,14 +24,10 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest]
-        php: [8.2, 8.3, 8.4]
-        laravel: ['11.*', '12.*']
+        php: [8.2, 8.3, 8.4, 8.5]
+        laravel: ['12.*']
+        testbench: ['10.*']
         stability: [prefer-stable]
-        include:
-          - laravel: 11.*
-            testbench: 9.*
-          - laravel: 12.*
-            testbench: 10.*
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
 
@@ -46,11 +49,69 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+          composer require --dev "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
+
+      - name: Audit dependencies
+        run: composer audit --locked
 
       - name: List Installed Dependencies
         run: composer show -D
 
       - name: Execute tests
         run: vendor/bin/pest --ci
+
+  compatibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    name: P8.2 - L12.* - Filament 4.* - Spatie Backup 9.*
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+          coverage: none
+
+      - name: Install pinned compatibility dependencies
+        run: |
+          composer require "filament/filament:4.*" "spatie/laravel-backup:9.*" --no-interaction --no-update
+          composer require "laravel/framework:12.*" "orchestra/testbench:10.*" --no-interaction --no-update
+          composer update --prefer-stable --prefer-dist --no-interaction
+
+      - name: Audit dependencies
+        run: composer audit --locked
+
+      - name: Execute tests
+        run: vendor/bin/pest --ci
+
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    name: Coverage
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.4
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+          coverage: xdebug
+
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:12.*" "orchestra/testbench:10.*" --no-interaction --no-update
+          composer update --prefer-stable --prefer-dist --no-interaction
+
+      - name: Audit dependencies
+        run: composer audit --locked
+
+      - name: Enforce full coverage
+        run: vendor/bin/pest --ci --coverage --min=100

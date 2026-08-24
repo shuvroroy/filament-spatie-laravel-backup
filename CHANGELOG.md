@@ -2,6 +2,37 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v4.0.0 - Unreleased
+
+### Added
+
+- Added live Disk and Backup Type filters, backed by the new `BackupType` enum.
+- Added configurable metadata caching, pagination, backup limits, queue connections, navigation, clusters, and status-table visibility.
+- Added deterministic destination IDs, stable ordering, and Ukrainian translations.
+
+### Changed
+
+- Updated the supported stack to PHP 8.2–8.5, Laravel 12–13, Filament 4–5, and Spatie Laravel Backup 9–10.
+- Backups are listed newest first, and a selected disk reads only that destination.
+- Backup type markers are recognized only as `only-db-` and `only-files-` filename prefixes. Combined backups consistently use `db-and-files`.
+- The default navigation icon is now `heroicon-o-archive-box-arrow-down`.
+- Manual backups are dispatched immediately, command failures fail the queue job, and configured timeouts are exposed to Laravel workers.
+- Replaced Filament's deprecated `getActions()` page hook with `getHeaderActions()`.
+- Raised static analysis from PHPStan level 4 to the maximum level.
+
+### Removed
+
+- Removed the deprecated `usingPolingInterval()` and `getPolingInterval()` aliases.
+- Removed the `Option` enum in favour of `BackupType`.
+- Removed the request-coupled `getDisk()` helper.
+- Replaced `clearCachedBackupDestinationData()` with explicit single-destination and all-destination cache methods.
+
+### Fixed
+
+- Eliminated per-backup metadata requests when a filesystem supplies directory metadata.
+- Guarded PHP execution-time configuration when `set_time_limit()` is disabled.
+- Corrected cache invalidation, application-timezone formatting, unreachable destination handling, and backup command failure reporting.
+
 ## v3.4.0 - 2026-03-27
 
 ### What's Changed

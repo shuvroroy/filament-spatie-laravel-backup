@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => 'Penyimpanan',
+                    'type' => 'Jenis Cadangan',
                 ],
             ],
         ],
@@ -48,7 +49,7 @@ return [
 
             'messages' => [
                 'backup_success' => 'Membuat cadangan baru di latar belakang.',
-                'backup_delete_success' => 'Menghapus cadangan ini di latar belakang.',
+                'backup_delete_success' => 'Cadangan berhasil dihapus.',
             ],
 
             'modal' => [
