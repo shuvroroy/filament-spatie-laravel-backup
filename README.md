@@ -7,7 +7,16 @@
 
 This package adds a Filament page for creating, monitoring, downloading, and deleting application backups. It uses [spatie/laravel-backup](https://spatie.be/docs/laravel-backup/v10/introduction) to perform and monitor the backups.
 
-<img width="1481" alt="Screenshot 2023-08-05 at 2 42 10 PM" src="https://github.com/shuvroroy/filament-spatie-laravel-backup/assets/21066418/68fe1c0b-a130-41ce-8c7f-e5182d743225">
+## Contents
+
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Permissions](#permissions)
+- [Configuration](#configuration)
+- [Restoring backups](#restoring-backups)
+- [Troubleshooting](#troubleshooting)
+- [Upgrading](#upgrading)
 
 ## Requirements
 
@@ -38,6 +47,14 @@ Publish and review Spatie Laravel Backup's configuration. This creates `config/b
 php artisan vendor:publish --provider="Spatie\Backup\BackupServiceProvider" --tag="backup-config"
 ```
 
+Before creating a backup, review these values in `config/backup.php`:
+
+- `backup.name`
+- `backup.source.files.include` and `backup.source.databases`
+- `backup.destination.disks`
+
+The temporary directory and every destination must be writable and have enough free space for the archive. Database backups also require the relevant dump utility, such as `mysqldump` or `pg_dump`, to be available to both the web process and queue workers. See Spatie's [requirements](https://spatie.be/docs/laravel-backup/v10/requirements) and [installation and setup guide](https://spatie.be/docs/laravel-backup/v10/installation-and-setup) for disk, scheduling, cleanup, monitoring, and database-dump configuration.
+
 Publish the package's assets:
 
 ```bash
@@ -50,7 +67,7 @@ You can publish the lang file with:
 php artisan vendor:publish --tag="filament-spatie-backup-translations"
 ```
 
-## Usage
+## Quick start
 
 You first need to register the plugin with Filament. This can be done inside of your `PanelProvider`, e.g. `AdminPanelProvider`.
 
@@ -85,49 +102,17 @@ return $panel->plugins([
 
 Do not pass multiple plugins as arguments to `plugin()`. That method accepts one plugin, so later arguments will not be registered.
 
-Use the plugin's navigation methods below to customise the icon, label, group, or sort order. Extend the page only when you need to customise page behaviour, such as its heading:
+The `sync` queue is convenient for local development, but production applications should process backups outside the Livewire request. Configure a supported asynchronous connection and start a worker before using the page:
 
-```php
-<?php
-
-namespace App\Filament\Pages;
-
-use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups as BaseBackups;
-
-class Backups extends BaseBackups
-{
-    public function getHeading(): string
-    {
-        return 'Application Backups';
-    }
-}
+```dotenv
+QUEUE_CONNECTION=database
 ```
 
-Then register the extended page class in `AdminPanelProvider`:
-
-```php
-<?php
-
-namespace App\Providers\Filament;
-
-use Filament\Panel;
-use Filament\PanelProvider;
-use App\Filament\Pages\Backups;
-use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
-
-class AdminPanelProvider extends PanelProvider
-{
-    public function panel(Panel $panel): Panel
-    {
-        return $panel
-            // ...
-            ->plugin(
-                FilamentSpatieLaravelBackupPlugin::make()
-                    ->usingPage(Backups::class)
-            );
-    }
-}
+```bash
+php artisan queue:work database
 ```
+
+Complete any setup required by your chosen driver and keep the worker running with a process monitor. See [Laravel's queue documentation](https://laravel.com/docs/queues) and the [queue configuration](#configuring-the-queue) below.
 
 ## Permissions
 
@@ -213,7 +198,55 @@ Run the seeder using:
 php artisan db:seed --class=BackupPermissionSeeder
 ```
 
-## Customising navigation
+## Configuration
+
+### Custom page
+
+Use the plugin methods below to customise navigation. Extend the page only when you need to customise page behaviour, such as its heading:
+
+```php
+<?php
+
+namespace App\Filament\Pages;
+
+use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups as BaseBackups;
+
+class Backups extends BaseBackups
+{
+    public function getHeading(): string
+    {
+        return 'Application Backups';
+    }
+}
+```
+
+Then register the extended page class in `AdminPanelProvider`:
+
+```php
+<?php
+
+namespace App\Providers\Filament;
+
+use App\Filament\Pages\Backups;
+use Filament\Panel;
+use Filament\PanelProvider;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            // ...
+            ->plugin(
+                FilamentSpatieLaravelBackupPlugin::make()
+                    ->usingPage(Backups::class)
+            );
+    }
+}
+```
+
+### Customising navigation
 
 The default navigation icon is `heroicon-o-archive-box-arrow-down`. You can customise the icon, label, group, and sort order directly on the plugin without extending the page class:
 
@@ -248,12 +281,12 @@ All navigation methods also accept closures for dynamic values:
 ```php
 FilamentSpatieLaravelBackupPlugin::make()
     ->navigationLabel(fn (): string => __('custom.backups'))
-    ->navigationGroup(fn (): ?string => auth()->user()->isAdmin() ? 'Admin' : 'Tools')
+    ->navigationGroup(fn (): ?string => auth()->user()?->isAdmin() === true ? 'Admin' : 'Tools')
 ```
 
 Pass `null` to `navigationGroup()` to remove the page from any navigation group.
 
-## Using the page in a cluster
+### Using the page in a cluster
 
 Pass the cluster class to the plugin. The navigation group is omitted automatically while the page is clustered:
 
@@ -264,7 +297,7 @@ FilamentSpatieLaravelBackupPlugin::make()
     ->cluster(System::class)
 ```
 
-## Customising the polling interval
+### Customising the polling interval
 
 You can customise the polling interval for the `Backups` by following the steps below:
 
@@ -293,9 +326,9 @@ class AdminPanelProvider extends PanelProvider
 
 Pass `null` to disable polling.
 
-## Large or remote backup destinations
+### Large or remote backup destinations
 
-Backup metadata is cached for 30 seconds by default and the table is paginated. You can tune the cache, show only the newest backups, or hide the health summary when a remote disk is especially slow.
+Backup metadata is cached for 30 seconds by default. The table starts at 10 records per page and offers 10, 25, and 50-record page sizes. You can tune the cache, show only the newest backups, or hide the health summary when a remote disk is especially slow.
 
 Backups are listed newest first. Selecting a disk filter queries and displays only that configured destination, avoiding unnecessary reads from the other backup disks.
 
@@ -308,9 +341,9 @@ FilamentSpatieLaravelBackupPlugin::make()
     ->statusListRecordsTable(false)
 ```
 
-Set `cacheDuration(0)` to disable metadata caching, or `backupLimit(null)` to display every backup.
+Set `cacheDuration(0)` to disable metadata caching, or `backupLimit(null)` to make every backup available to the paginated table.
 
-## Backup type API
+### Backup type API
 
 Manual backup creation, filename detection, and table filtering use the same enum values:
 
@@ -327,9 +360,9 @@ $type = FilamentSpatieLaravelBackup::detectBackupType($backupPath); // BackupTyp
 
 Extensions that mutate backup files can invalidate one known destination with `clearBackupDestinationCache($disk, $backupName)`, or every configured destination with `clearBackupDestinationCaches()`.
 
-## Customising the queue
+### Configuring the queue
 
-You can customise the queue name for the `Backups` by following the steps below:
+By default, backup jobs use your application's default queue connection and queue. You can route them to a dedicated connection and queue:
 
 ```php
 <?php
@@ -359,7 +392,13 @@ class AdminPanelProvider extends PanelProvider
 
 Failed backup commands fail the queued job, so asynchronous workers can retry them and record them in the configured failed-jobs store.
 
-## Customising the timeout
+Start a worker for the same connection and queue. For the example above, run:
+
+```bash
+php artisan queue:work redis --queue=backups
+```
+
+### Customising the timeout
 
 You can customise the timeout for the backup job by following the steps below:
 
@@ -415,33 +454,27 @@ class AdminPanelProvider extends PanelProvider
 
 Disabling the timeout does not remove the queue worker's memory limit. Size that limit separately for large backups.
 
-## Customising who can access the page
+### Configuration reference
 
-You can customise who can access the `Backups` page by adding an `authorize` method to the plugin.
-The method should return a boolean indicating whether the user is authorised to access the page.
+| Method | Default | Purpose |
+| --- | --- | --- |
+| `usingPage()` | Package `Backups` page | Register a custom page that extends the package page. |
+| `authorize()` | `true` | Control access to the entire backups page. |
+| `usingQueueConnection()` | Application default | Choose the connection used by backup jobs. |
+| `usingQueue()` | Default queue | Choose the queue used by backup jobs. |
+| `usingPollingInterval()` | `'30s'` | Set the Livewire polling interval; pass `null` to disable it. |
+| `cacheDuration()` | `30` seconds | Cache destination metadata; use `0` to disable caching. |
+| `backupLimit()` | `null` | Limit the table to the newest configured number of backups. |
+| `statusListRecordsTable()` | `true` | Show or hide the backup destination health summary. |
+| `timeout()` | PHP and worker defaults | Set the backup job timeout in seconds. |
+| `noTimeout()` | Not enabled | Set the job timeout to `0`. |
+| `cluster()` | `null` | Place the page in a Filament cluster. |
+| `navigationIcon()` | `heroicon-o-archive-box-arrow-down` | Set the navigation icon. |
+| `navigationLabel()` | Translated `Backups` label | Set the navigation label. |
+| `navigationGroup()` | Translated `Settings` group | Set the group; pass `null` to remove it. |
+| `navigationSort()` | `1` | Set the navigation sort order. |
 
-```php
-<?php
-
-namespace App\Providers\Filament;
-
-use Filament\Panel;
-use Filament\PanelProvider;
-use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
-
-class AdminPanelProvider extends PanelProvider
-{
-    public function panel(Panel $panel): Panel
-    {
-        return $panel
-            // ...
-            ->plugin(
-                FilamentSpatieLaravelBackupPlugin::make()
-                     ->authorize(fn (): bool => auth()->user()->email === 'admin@example.com'),
-            );
-    }
-}
-```
+`cacheDuration()` and `timeout()` accept zero or greater. `backupLimit()` accepts `null` or an integer of at least one. Navigation values and `authorize()` can also be resolved dynamically with closures where their method signatures allow it.
 
 ## Restoring backups
 
@@ -450,6 +483,11 @@ This package creates, lists, downloads, and deletes backups. It intentionally do
 ## Troubleshooting
 
 - **“Plugin is not registered for panel”**: ensure the backup plugin is actually registered. Use separate `plugin()` calls or one `plugins([...])` call, especially when combining it with other plugins.
+- **A backup remains pending**: make sure a worker is listening on the connection and queue configured with `usingQueueConnection()` and `usingQueue()`. Check the application log and failed-jobs store for the underlying command error.
+- **A manual backup times out in the browser**: the application is probably using the `sync` queue. Select an asynchronous connection and keep its worker running; increasing `timeout()` alone does not move the work outside the Livewire request.
+- **`mysqldump`, `pg_dump`, or another dump binary cannot be found**: install the utility on the worker host or configure its directory with `dump.dump_binary_path` on the relevant connection in `config/database.php`.
+- **The archive cannot be written or a destination is unreachable**: verify temporary-directory and destination permissions, available disk space, remote credentials, and network access from the queue-worker host.
+- **Configuration changes are ignored**: clear or rebuild Laravel's configuration cache after changing `config/backup.php`, `config/filesystems.php`, queue settings, or environment variables. Restart long-running queue workers after deployment so they load the new configuration.
 - **“Could not find driver” while an old v2 release creates `backup_destination_*` tables**: upgrade to v3. The current implementation uses Filament custom data and does not require SQLite or Sushi models.
 - **Slow S3-compatible disks**: increase `cacheDuration()`, increase or disable polling, set `backupLimit()`, or hide the status table as shown above.
 
@@ -469,16 +507,16 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 
 ## Contributing
 
-Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
+Please see [CONTRIBUTING](https://github.com/shuvroroy/filament-spatie-laravel-backup/blob/main/.github/CONTRIBUTING.md) for details.
 
 ## Security Vulnerabilities
 
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
+Please review [our security policy](https://github.com/shuvroroy/filament-spatie-laravel-backup/security/policy) on how to report security vulnerabilities.
 
 ## Credits
 
 - [Shuvro Roy](https://github.com/shuvroroy)
-- [All Contributors](../../contributors)
+- [All Contributors](https://github.com/shuvroroy/filament-spatie-laravel-backup/graphs/contributors)
 
 ## License
 
