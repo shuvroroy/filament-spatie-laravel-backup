@@ -259,6 +259,8 @@ Pass `null` to disable polling. The older `usingPolingInterval()` spelling remai
 
 Backup metadata is cached for 30 seconds by default and the table is paginated. You can tune the cache, show only the newest backups, or hide the health summary when a remote disk is especially slow:
 
+Backups are listed newest first. Selecting a disk filter queries and displays only that configured destination, avoiding unnecessary reads from the other backup disks.
+
 ```php
 FilamentSpatieLaravelBackupPlugin::make()
     ->cacheDuration(60)
