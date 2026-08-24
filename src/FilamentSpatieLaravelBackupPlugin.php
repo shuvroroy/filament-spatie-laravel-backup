@@ -2,11 +2,15 @@
 
 namespace ShuvroRoy\FilamentSpatieLaravelBackup;
 
+use BackedEnum;
 use Closure;
+use Filament\Clusters\Cluster;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Filament\Support\Concerns\EvaluatesClosures;
+use LogicException;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups;
+use UnexpectedValueException;
 
 class FilamentSpatieLaravelBackupPlugin implements Plugin
 {
@@ -16,6 +20,7 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 
     protected bool | Closure $authorizeUsing = true;
 
+    /** @var class-string<Backups> */
     protected string $page = Backups::class;
 
     protected ?string $queue = null;
@@ -32,9 +37,10 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 
     protected ?int $timeout = null;
 
+    /** @var class-string<Cluster>|null */
     protected ?string $clusterName = null;
 
-    protected Closure | string | \BackedEnum $navigationIcon = 'heroicon-o-cog';
+    protected Closure | string | BackedEnum $navigationIcon = 'heroicon-o-cog';
 
     protected string | Closure | null $navigationLabel = null;
 
@@ -78,10 +84,14 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
             return static::$registeringPlugin;
         }
 
-        /** @var static $instance */
-        $instance = filament(app(static::class)->getId());
+        $instance = static::make();
+        $registeredPlugin = filament($instance->getId());
 
-        return $instance;
+        if (! $registeredPlugin instanceof static) {
+            throw new LogicException('The registered Filament backup plugin has an invalid type.');
+        }
+
+        return $registeredPlugin;
     }
 
     public function getId(): string
@@ -91,9 +101,16 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 
     public static function make(): static
     {
-        return new static;
+        $plugin = app(static::class);
+
+        if (! $plugin instanceof static) {
+            throw new LogicException('The container did not resolve a Filament backup plugin.');
+        }
+
+        return $plugin;
     }
 
+    /** @param class-string<Backups> $page */
     public function usingPage(string $page): static
     {
         $this->page = $page;
@@ -101,6 +118,7 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
         return $this;
     }
 
+    /** @return class-string<Backups> */
     public function getPage(): string
     {
         return $this->page;
@@ -137,25 +155,9 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
         return $this;
     }
 
-    /**
-     * @deprecated Use usingPollingInterval() instead.
-     */
-    public function usingPolingInterval(?string $interval): static
-    {
-        return $this->usingPollingInterval($interval);
-    }
-
     public function getPollingInterval(): ?string
     {
         return $this->pollingInterval;
-    }
-
-    /**
-     * @deprecated Use getPollingInterval() instead.
-     */
-    public function getPolingInterval(): ?string
-    {
-        return $this->getPollingInterval();
     }
 
     public function cacheDuration(int $seconds): static
@@ -238,6 +240,7 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
         return __('filament-spatie-backup::backup.pages.backups.heading');
     }
 
+    /** @param class-string<Cluster>|null $cluster */
     public function cluster(?string $cluster): static
     {
         $this->clusterName = $cluster;
@@ -245,6 +248,7 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
         return $this;
     }
 
+    /** @return class-string<Cluster>|null */
     public function getClusterName(): ?string
     {
         return $this->clusterName;
@@ -266,6 +270,10 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
             return __('filament-spatie-backup::backup.pages.backups.navigation.group');
         }
 
+        if ($navigationGroup !== null && ! is_string($navigationGroup)) {
+            throw new UnexpectedValueException('The navigation group must resolve to a string or null.');
+        }
+
         return $navigationGroup;
     }
 
@@ -278,10 +286,16 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 
     public function getNavigationSort(): int
     {
-        return $this->evaluate($this->navigationSort);
+        $navigationSort = $this->evaluate($this->navigationSort);
+
+        if (! is_int($navigationSort)) {
+            throw new UnexpectedValueException('The navigation sort must resolve to an integer.');
+        }
+
+        return $navigationSort;
     }
 
-    public function navigationIcon(string | \BackedEnum | Closure $navigationIcon): static
+    public function navigationIcon(string | BackedEnum | Closure $navigationIcon): static
     {
         $this->navigationIcon = $navigationIcon;
 
@@ -292,7 +306,15 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
     {
         $icon = $this->evaluate($this->navigationIcon);
 
-        return $icon instanceof \BackedEnum ? $icon->value : $icon;
+        if ($icon instanceof BackedEnum) {
+            $icon = $icon->value;
+        }
+
+        if ($icon !== null && ! is_string($icon)) {
+            throw new UnexpectedValueException('The navigation icon must resolve to a string-backed value.');
+        }
+
+        return $icon;
     }
 
     public function navigationLabel(string | Closure | null $navigationLabel): static
@@ -304,6 +326,16 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 
     public function getNavigationLabel(): string
     {
-        return $this->evaluate($this->navigationLabel) ?? __('filament-spatie-backup::backup.pages.backups.navigation.label');
+        $navigationLabel = $this->evaluate($this->navigationLabel);
+
+        if ($navigationLabel === null) {
+            return __('filament-spatie-backup::backup.pages.backups.navigation.label');
+        }
+
+        if (! is_string($navigationLabel)) {
+            throw new UnexpectedValueException('The navigation label must resolve to a string or null.');
+        }
+
+        return $navigationLabel;
     }
 }

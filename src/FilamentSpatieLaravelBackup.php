@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\StorageAttributes;
+use ShuvroRoy\FilamentSpatieLaravelBackup\Enums\BackupType;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Support\CachedBackup;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Support\CachedBackupDestination;
 use Spatie\Backup\BackupDestination\BackupCollection;
@@ -22,18 +23,27 @@ class FilamentSpatieLaravelBackup
 {
     public const DEFAULT_CACHE_DURATION = 30;
 
+    /** @return list<string> */
     public static function getDisks(): array
     {
-        return config('backup.backup.destination.disks');
+        $configuredDisks = config('backup.backup.destination.disks', []);
+
+        if (! is_array($configuredDisks)) {
+            return [];
+        }
+
+        $disks = [];
+
+        foreach ($configuredDisks as $disk) {
+            if (is_string($disk)) {
+                $disks[] = $disk;
+            }
+        }
+
+        return $disks;
     }
 
-    public static function getDisk(): string
-    {
-        $defaultDisks = static::getDisks();
-
-        return request('tableFilters.disk.value', reset($defaultDisks));
-    }
-
+    /** @return array<string, string> */
     public static function getFilterDisks(): array
     {
         $result = [];
@@ -51,29 +61,29 @@ class FilamentSpatieLaravelBackup
     public static function getFilterTypes(): array
     {
         return [
-            'only-db' => __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_db'),
-            'only-files' => __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_files'),
-            'db-and-files' => __('filament-spatie-backup::backup.pages.backups.modal.buttons.db_and_files'),
+            BackupType::ONLY_DATABASE->value => __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_db'),
+            BackupType::ONLY_FILES->value => __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_files'),
+            BackupType::DATABASE_AND_FILES->value => __('filament-spatie-backup::backup.pages.backups.modal.buttons.db_and_files'),
         ];
     }
 
-    public static function detectBackupType(string $path): string
+    public static function detectBackupType(string $path): BackupType
     {
         $filename = basename($path);
 
-        if (str_contains($filename, 'only-db')) {
-            return 'only-db';
+        if (str_starts_with($filename, BackupType::ONLY_DATABASE->value . '-')) {
+            return BackupType::ONLY_DATABASE;
         }
 
-        if (str_contains($filename, 'only-files')) {
-            return 'only-files';
+        if (str_starts_with($filename, BackupType::ONLY_FILES->value . '-')) {
+            return BackupType::ONLY_FILES;
         }
 
-        return 'db-and-files';
+        return BackupType::DATABASE_AND_FILES;
     }
 
     /**
-     * @return array<int, array{key: string, disk: string, path: string, type: string, date: string, size: string}>
+     * @return list<array{key: string, disk: string, path: string, type: string, date: string, size: string}>
      */
     public static function getBackupDestinationData(
         string $disk,
@@ -81,128 +91,197 @@ class FilamentSpatieLaravelBackup
     ): array {
         $snapshot = static::getBackupDestinationSnapshot(
             $disk,
-            config('backup.backup.name'),
+            config()->string('backup.backup.name'),
             $cacheDuration,
         );
 
-        return collect($snapshot['backups'])
-            ->map(function (array $backup) use ($disk): array {
-                return [
-                    'key' => sha1($disk . "\0" . $backup['path']),
-                    'disk' => $disk,
-                    'path' => $backup['path'],
-                    'type' => static::detectBackupType($backup['path']),
-                    'date' => Carbon::createFromTimestamp($backup['timestamp'])
-                        ->setTimezone(config('app.timezone'))
-                        ->format('Y-m-d H:i:s'),
-                    'size' => Format::humanReadableSize($backup['size']),
-                ];
-            })
-            ->all();
+        $records = [];
+
+        foreach ($snapshot['backups'] as $backup) {
+            $records[] = [
+                'key' => sha1($disk . "\0" . $backup['path']),
+                'disk' => $disk,
+                'path' => $backup['path'],
+                'type' => static::detectBackupType($backup['path'])->value,
+                'date' => Carbon::createFromTimestamp($backup['timestamp'])
+                    ->setTimezone(config()->string('app.timezone', 'UTC'))
+                    ->format('Y-m-d H:i:s'),
+                'size' => Format::humanReadableSize($backup['size']),
+            ];
+        }
+
+        return $records;
     }
 
     /**
-     * @return array<int, array{id: int|string, name: string, disk: string, reachable: bool, healthy: bool, amount: int, newest: string, usedStorage: string}>
+     * @return list<array{id: string, name: string, disk: string, reachable: bool, healthy: bool, amount: int, newest: string, usedStorage: string}>
      */
     public static function getBackupDestinationStatusData(
         int $cacheDuration = self::DEFAULT_CACHE_DURATION,
     ): array {
-        return collect(config('backup.monitor_backups', []))
-            ->flatMap(function (array $monitor) use ($cacheDuration) {
-                $name = $monitor['name'];
-                $healthChecks = static::makeHealthChecks(
-                    $monitor['health_checks'] ?? $monitor['healthChecks'] ?? [],
-                );
+        $statuses = [];
 
-                return collect($monitor['disks'])
-                    ->map(function (string $disk) use ($cacheDuration, $healthChecks, $name): array {
-                        $snapshot = static::getBackupDestinationSnapshot($disk, $name, $cacheDuration);
+        foreach (static::getMonitorConfigurations() as $monitor) {
+            $name = $monitor['name'];
+            $healthChecks = static::makeHealthChecks($monitor['health_checks']);
 
-                        /** @var CachedBackupDestination $destination */
-                        $destination = CachedBackupDestination::create($disk, $name);
-                        $reachable = $snapshot['reachable'] && $destination->connectionError === null;
-                        $backups = new BackupCollection;
+            foreach ($monitor['disks'] as $disk) {
+                $snapshot = static::getBackupDestinationSnapshot($disk, $name, $cacheDuration);
 
-                        if ($reachable) {
-                            $filesystem = $destination->disk();
-                            $backups = new BackupCollection(
-                                collect($snapshot['backups'])
-                                    ->map(fn (array $backup): CachedBackup => new CachedBackup(
-                                        $filesystem,
-                                        $backup['path'],
-                                        Carbon::createFromTimestamp($backup['timestamp']),
-                                        $backup['size'],
-                                    ))
-                                    ->all(),
-                            );
-                        }
+                $destination = CachedBackupDestination::create($disk, $name);
+                $reachable = $snapshot['reachable'] && $destination->connectionError === null;
+                $backups = new BackupCollection;
 
-                        $destination->useSnapshot($backups, $reachable, $snapshot['error']);
+                if ($reachable) {
+                    $filesystem = $destination->disk();
+                    $cachedBackups = [];
 
-                        $cachedStatus = new BackupDestinationStatus($destination, $healthChecks);
-                        $newestBackup = $destination->newestBackup();
+                    foreach ($snapshot['backups'] as $backup) {
+                        $cachedBackups[] = new CachedBackup(
+                            $filesystem,
+                            $backup['path'],
+                            Carbon::createFromTimestamp($backup['timestamp']),
+                            $backup['size'],
+                        );
+                    }
 
-                        return [
-                            'id' => sha1($disk . "\0" . $name),
-                            'name' => $name,
-                            'disk' => $disk,
-                            'reachable' => $reachable,
-                            'healthy' => $cachedStatus->isHealthy(),
-                            'amount' => $backups->count(),
-                            'newest' => $newestBackup
-                                ? $newestBackup->date()->diffForHumans()
-                                : __('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.no_backups_present'),
-                            'usedStorage' => Format::humanReadableSize($backups->size()),
-                        ];
-                    });
-            })
-            ->sortBy(fn (array $status): string => $status['name'] . '-' . $status['disk'])
-            ->values()
-            ->toArray();
+                    $backups = new BackupCollection($cachedBackups);
+                }
+
+                $destination->useSnapshot($backups, $reachable, $snapshot['error']);
+
+                $cachedStatus = new BackupDestinationStatus($destination, $healthChecks);
+                $newestBackup = $destination->newestBackup();
+                $newest = $newestBackup
+                    ? $newestBackup->date()->diffForHumans()
+                    : __('filament-spatie-backup::backup.components.backup_destination_status_list.table.fields.no_backups_present');
+
+                $statuses[] = [
+                    'id' => sha1($disk . "\0" . $name),
+                    'name' => $name,
+                    'disk' => $disk,
+                    'reachable' => $reachable,
+                    'healthy' => $cachedStatus->isHealthy(),
+                    'amount' => $backups->count(),
+                    'newest' => $newest,
+                    'usedStorage' => Format::humanReadableSize($backups->size()),
+                ];
+            }
+        }
+
+        usort(
+            $statuses,
+            fn (array $left, array $right): int => [$left['name'], $left['disk']] <=> [$right['name'], $right['disk']],
+        );
+
+        return $statuses;
     }
 
     /**
-     * @param  array<class-string<HealthCheck>|int, class-string<HealthCheck>|int|array<string, mixed>>  $configuredHealthChecks
-     * @return array<int, HealthCheck>
+     * @return list<HealthCheck>
      */
-    protected static function makeHealthChecks(array $configuredHealthChecks): array
+    protected static function makeHealthChecks(mixed $configuredHealthChecks): array
     {
-        return collect($configuredHealthChecks)
-            ->map(function (string | int | array $options, string | int $class): HealthCheck {
-                if (is_int($class)) {
-                    $class = $options;
-                    $options = [];
-                }
-
-                if (! is_array($options)) {
-                    return new $class($options);
-                }
-
-                return app()->makeWith($class, $options);
-            })
-            ->values()
-            ->all();
-    }
-
-    public static function clearCachedBackupDestinationData(
-        ?string $disk = null,
-        ?string $backupName = null,
-    ): void {
-        if ($disk !== null && $backupName !== null) {
-            Cache::forget(static::snapshotCacheKey($disk, $backupName));
-            Cache::forget('backups-' . $disk);
-
-            return;
+        if (! is_array($configuredHealthChecks)) {
+            return [];
         }
 
+        $healthChecks = [];
+
+        foreach ($configuredHealthChecks as $class => $options) {
+            if (is_int($class)) {
+                if (is_string($options) && is_a($options, HealthCheck::class, true)) {
+                    $healthCheck = app()->make($options);
+
+                    if ($healthCheck instanceof HealthCheck) {
+                        $healthChecks[] = $healthCheck;
+                    }
+                }
+
+                continue;
+            }
+
+            if (! is_a($class, HealthCheck::class, true)) {
+                continue;
+            }
+
+            if (is_array($options)) {
+                $healthCheck = app()->makeWith($class, $options);
+
+                if ($healthCheck instanceof HealthCheck) {
+                    $healthChecks[] = $healthCheck;
+                }
+
+                continue;
+            }
+
+            if (is_int($options) || is_float($options) || is_string($options) || is_bool($options) || $options === null) {
+                $healthChecks[] = new $class($options);
+            }
+        }
+
+        return $healthChecks;
+    }
+
+    /**
+     * @return list<array{name: string, disks: list<string>, health_checks: mixed}>
+     */
+    protected static function getMonitorConfigurations(): array
+    {
+        $configuredMonitors = config('backup.monitor_backups', []);
+
+        if (! is_array($configuredMonitors)) {
+            return [];
+        }
+
+        $monitors = [];
+
+        foreach ($configuredMonitors as $monitor) {
+            if (! is_array($monitor)) {
+                continue;
+            }
+
+            $name = $monitor['name'] ?? null;
+            $configuredDisks = $monitor['disks'] ?? null;
+
+            if (! is_string($name) || ! is_array($configuredDisks)) {
+                continue;
+            }
+
+            $disks = [];
+
+            foreach ($configuredDisks as $disk) {
+                if (is_string($disk)) {
+                    $disks[] = $disk;
+                }
+            }
+
+            $monitors[] = [
+                'name' => $name,
+                'disks' => $disks,
+                'health_checks' => $monitor['health_checks'] ?? [],
+            ];
+        }
+
+        return $monitors;
+    }
+
+    public static function clearBackupDestinationCache(string $disk, string $backupName): void
+    {
+        Cache::forget(static::snapshotCacheKey($disk, $backupName));
+        Cache::forget('backups-' . $disk);
+    }
+
+    public static function clearBackupDestinationCaches(): void
+    {
         $destinations = collect(static::getDisks())
             ->map(fn (string $configuredDisk): array => [
                 'disk' => $configuredDisk,
-                'name' => config('backup.backup.name'),
+                'name' => config()->string('backup.backup.name'),
             ]);
 
-        foreach (config('backup.monitor_backups', []) as $monitor) {
-            foreach ($monitor['disks'] ?? [] as $monitoredDisk) {
+        foreach (static::getMonitorConfigurations() as $monitor) {
+            foreach ($monitor['disks'] as $monitoredDisk) {
                 $destinations->push([
                     'disk' => $monitoredDisk,
                     'name' => $monitor['name'],
@@ -213,8 +292,7 @@ class FilamentSpatieLaravelBackup
         $destinations
             ->unique(fn (array $destination): string => $destination['disk'] . "\0" . $destination['name'])
             ->each(function (array $destination): void {
-                Cache::forget(static::snapshotCacheKey($destination['disk'], $destination['name']));
-                Cache::forget('backups-' . $destination['disk']);
+                static::clearBackupDestinationCache($destination['disk'], $destination['name']);
             });
 
         Cache::forget('backup-statuses');
@@ -297,12 +375,12 @@ class FilamentSpatieLaravelBackup
     protected static function listBackupAttributes(Filesystem $filesystem, string $backupName): array
     {
         if ($filesystem instanceof FilesystemAdapter) {
-            return $filesystem->getDriver()
+            return array_values($filesystem->getDriver()
                 ->listContents($backupName, true)
-                ->toArray();
+                ->toArray());
         }
 
-        return $filesystem->allFiles($backupName);
+        return array_values($filesystem->allFiles($backupName));
     }
 
     protected static function isBackupFile(string $path, ?string $mimeType = null): bool
@@ -327,7 +405,7 @@ class FilamentSpatieLaravelBackup
             $date = Carbon::createFromFormat(BackupJob::FILENAME_FORMAT, basename($path));
 
             if ($date !== null) {
-                return $date->timestamp;
+                return (int) $date->timestamp;
             }
         } catch (Throwable) {
             // Custom backup filenames use the filesystem's modification time.

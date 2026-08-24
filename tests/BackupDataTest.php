@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemOperator;
+use ShuvroRoy\FilamentSpatieLaravelBackup\Enums\BackupType;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackup;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Support\CachedBackupDestination;
 use Spatie\Backup\BackupDestination\BackupCollection;
@@ -89,18 +90,33 @@ it('falls back to filesystem methods when directory metadata is unavailable', fu
         ->and($records[0]['size'])->toBe('512 B');
 });
 
-it('resolves disk filters and labels from the request and configuration', function () {
+it('resolves disk filter labels from configuration', function () {
     config()->set('backup.backup.destination.disks', ['backups', 'cold-storage']);
 
-    expect(FilamentSpatieLaravelBackup::getDisk())->toBe('backups')
-        ->and(FilamentSpatieLaravelBackup::getFilterDisks())->toBe([
-            'backups' => 'Backups',
-            'cold-storage' => 'Cold-storage',
-        ]);
+    expect(FilamentSpatieLaravelBackup::getFilterDisks())->toBe([
+        'backups' => 'Backups',
+        'cold-storage' => 'Cold-storage',
+    ]);
+});
 
-    request()->merge(['tableFilters' => ['disk' => ['value' => 'cold-storage']]]);
+it('ignores malformed disk monitor and health check configuration', function () {
+    config()->set('backup.backup.destination.disks', 'backups');
+    config()->set('backup.monitor_backups', 'test-app');
 
-    expect(FilamentSpatieLaravelBackup::getDisk())->toBe('cold-storage');
+    expect(FilamentSpatieLaravelBackup::getDisks())->toBe([])
+        ->and(FilamentSpatieLaravelBackup::getBackupDestinationStatusData(cacheDuration: 0))->toBe([]);
+
+    config()->set('backup.backup.destination.disks', ['backups', null]);
+    config()->set('backup.monitor_backups', [
+        'invalid monitor',
+        ['name' => null, 'disks' => []],
+        ['name' => 'missing-disks'],
+        ['name' => 'invalid-checks', 'disks' => [], 'health_checks' => 'invalid'],
+        ['name' => 'invalid-class', 'disks' => [], 'health_checks' => [stdClass::class => 1]],
+    ]);
+
+    expect(FilamentSpatieLaravelBackup::getDisks())->toBe(['backups'])
+        ->and(FilamentSpatieLaravelBackup::getBackupDestinationStatusData(cacheDuration: 0))->toBe([]);
 });
 
 it('detects backup types from filenames and provides translated filter options', function () {
@@ -109,14 +125,20 @@ it('detects backup types from filenames and provides translated filter options',
     Storage::disk('backups')->put('test-app/only-files-2026-08-24-01-00-00.zip', 'files');
     Storage::disk('backups')->put('test-app/2026-08-24-00-00-00.zip', 'all');
 
-    $records = collect(FilamentSpatieLaravelBackup::getBackupDestinationData('backups', cacheDuration: 0))
-        ->keyBy('path');
+    $types = collect(FilamentSpatieLaravelBackup::getBackupDestinationData('backups', cacheDuration: 0))
+        ->pluck('type', 'path')
+        ->all();
 
-    expect($records['test-app/only-db-2026-08-24-02-00-00.zip']['type'])->toBe('only-db')
-        ->and($records['test-app/only-files-2026-08-24-01-00-00.zip']['type'])->toBe('only-files')
-        ->and($records['test-app/2026-08-24-00-00-00.zip']['type'])->toBe('db-and-files')
-        ->and(FilamentSpatieLaravelBackup::detectBackupType('only-db-app/2026-08-24-00-00-00.zip'))
-        ->toBe('db-and-files')
+    expect($types)->toMatchArray([
+        'test-app/only-db-2026-08-24-02-00-00.zip' => 'only-db',
+        'test-app/only-files-2026-08-24-01-00-00.zip' => 'only-files',
+        'test-app/2026-08-24-00-00-00.zip' => 'db-and-files',
+    ])->and(FilamentSpatieLaravelBackup::detectBackupType('only-db-app/2026-08-24-00-00-00.zip'))
+        ->toBe(BackupType::DATABASE_AND_FILES)
+        ->and(FilamentSpatieLaravelBackup::detectBackupType('backup-only-files-2026-08-24.zip'))
+        ->toBe(BackupType::DATABASE_AND_FILES)
+        ->and(FilamentSpatieLaravelBackup::detectBackupType('only-db-2026-08-24.zip'))
+        ->toBe(BackupType::ONLY_DATABASE)
         ->and(FilamentSpatieLaravelBackup::getFilterTypes())->toBe([
             'only-db' => 'Only DB',
             'only-files' => 'Only Files',
@@ -146,7 +168,7 @@ it('shares and invalidates cached backup snapshots', function () {
     expect(FilamentSpatieLaravelBackup::getBackupDestinationData('backups', cacheDuration: 60))
         ->toHaveCount(1);
 
-    FilamentSpatieLaravelBackup::clearCachedBackupDestinationData('backups', 'test-app');
+    FilamentSpatieLaravelBackup::clearBackupDestinationCache('backups', 'test-app');
 
     expect(FilamentSpatieLaravelBackup::getBackupDestinationData('backups', cacheDuration: 60))
         ->toHaveCount(2);
@@ -171,7 +193,7 @@ it('invalidates every configured and monitored destination cache', function () {
         Cache::put($key, true, 60);
     }
 
-    FilamentSpatieLaravelBackup::clearCachedBackupDestinationData();
+    FilamentSpatieLaravelBackup::clearBackupDestinationCaches();
 
     foreach ($keys as $key) {
         expect(Cache::has($key))->toBeFalse();

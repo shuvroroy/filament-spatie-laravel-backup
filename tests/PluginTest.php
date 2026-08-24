@@ -1,5 +1,7 @@
 <?php
 
+use Filament\Clusters\Cluster;
+use Filament\Contracts\Plugin as FilamentPlugin;
 use Filament\Facades\Filament;
 use Filament\Panel;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
@@ -10,6 +12,27 @@ enum TestNavigationIcon: string
     case Backups = 'heroicon-o-archive-box';
 }
 
+enum TestIntegerNavigationIcon: int
+{
+    case Backups = 1;
+}
+
+class PluginTestCluster extends Cluster {}
+
+class CustomBackupsPage extends Backups {}
+
+class ConflictingBackupPlugin implements FilamentPlugin
+{
+    public function getId(): string
+    {
+        return 'filament-spatie-backup';
+    }
+
+    public function register(Panel $panel): void {}
+
+    public function boot(Panel $panel): void {}
+}
+
 it('configures polling cache queue and backup limits', function () {
     $plugin = FilamentSpatieLaravelBackupPlugin::make()
         ->usingPollingInterval(null)
@@ -18,27 +41,25 @@ it('configures polling cache queue and backup limits', function () {
         ->usingQueueConnection('redis')
         ->usingQueue('backups');
 
-    expect($plugin)
-        ->getPollingInterval()->toBeNull()
-        ->getPolingInterval()->toBeNull()
-        ->getCacheDuration()->toBe(90)
-        ->getBackupLimit()->toBe(15)
-        ->getQueueConnection()->toBe('redis')
-        ->getQueue()->toBe('backups');
+    expect($plugin->getPollingInterval())->toBeNull()
+        ->and($plugin->getCacheDuration())->toBe(90)
+        ->and($plugin->getBackupLimit())->toBe(15)
+        ->and($plugin->getQueueConnection())->toBe('redis')
+        ->and($plugin->getQueue())->toBe('backups');
 });
 
-it('keeps the deprecated polling interval spelling compatible', function () {
-    $plugin = FilamentSpatieLaravelBackupPlugin::make()
-        ->usingPolingInterval('45s');
+it('does not expose the removed polling interval aliases', function () {
+    $plugin = FilamentSpatieLaravelBackupPlugin::make();
 
-    expect($plugin->getPollingInterval())->toBe('45s');
+    expect(method_exists($plugin, 'usingPolingInterval'))->toBeFalse()
+        ->and(method_exists($plugin, 'getPolingInterval'))->toBeFalse();
 });
 
 it('keeps cluster configuration isolated between plugin instances', function () {
-    $clusteredPlugin = FilamentSpatieLaravelBackupPlugin::make()->cluster('App\\Filament\\Clusters\\System');
+    $clusteredPlugin = FilamentSpatieLaravelBackupPlugin::make()->cluster(PluginTestCluster::class);
     $plainPlugin = FilamentSpatieLaravelBackupPlugin::make();
 
-    expect($clusteredPlugin->getClusterName())->toBe('App\\Filament\\Clusters\\System')
+    expect($clusteredPlugin->getClusterName())->toBe(PluginTestCluster::class)
         ->and($plainPlugin->getClusterName())->toBeNull();
 });
 
@@ -53,13 +74,13 @@ it('can register its page before a default panel exists', function () {
 it('resolves cluster configuration from the current panel', function () {
     $clusteredPanel = Panel::make()
         ->id('clustered')
-        ->plugin(FilamentSpatieLaravelBackupPlugin::make()->cluster('App\\Filament\\Clusters\\System'));
+        ->plugin(FilamentSpatieLaravelBackupPlugin::make()->cluster(PluginTestCluster::class));
     $plainPanel = Panel::make()
         ->id('plain')
         ->plugin(FilamentSpatieLaravelBackupPlugin::make());
 
     Filament::setCurrentPanel($clusteredPanel);
-    expect(Backups::getCluster())->toBe('App\\Filament\\Clusters\\System');
+    expect(Backups::getCluster())->toBe(PluginTestCluster::class);
 
     Filament::setCurrentPanel($plainPanel);
     expect(Backups::getCluster())->toBeNull();
@@ -80,6 +101,41 @@ it('rejects invalid cache durations and backup limits', function () {
         ->toThrow(InvalidArgumentException::class);
 });
 
+it('rejects invalid resolved navigation values', function () {
+    expect(fn () => FilamentSpatieLaravelBackupPlugin::make()
+        ->navigationGroup(fn (): int => 1)
+        ->getNavigationGroup())->toThrow(UnexpectedValueException::class)
+        ->and(fn () => FilamentSpatieLaravelBackupPlugin::make()
+            ->navigationSort(fn (): string => 'first')
+            ->getNavigationSort())->toThrow(UnexpectedValueException::class)
+        ->and(fn () => FilamentSpatieLaravelBackupPlugin::make()
+            ->navigationIcon(TestIntegerNavigationIcon::Backups)
+            ->getNavigationIcon())->toThrow(UnexpectedValueException::class)
+        ->and(fn () => FilamentSpatieLaravelBackupPlugin::make()
+            ->navigationLabel(fn (): int => 1)
+            ->getNavigationLabel())->toThrow(UnexpectedValueException::class);
+});
+
+it('rejects invalid container and panel plugin resolutions', function () {
+    app()->instance(FilamentSpatieLaravelBackupPlugin::class, new stdClass);
+
+    try {
+        expect(fn () => FilamentSpatieLaravelBackupPlugin::make())
+            ->toThrow(LogicException::class);
+    } finally {
+        app()->forgetInstance(FilamentSpatieLaravelBackupPlugin::class);
+    }
+
+    $panel = Panel::make()
+        ->id('conflicting')
+        ->plugin(new ConflictingBackupPlugin);
+
+    Filament::setCurrentPanel($panel);
+
+    expect(fn () => FilamentSpatieLaravelBackupPlugin::get())
+        ->toThrow(LogicException::class);
+});
+
 it('configures authorization page and status table visibility', function () {
     $plugin = FilamentSpatieLaravelBackupPlugin::make();
 
@@ -90,11 +146,11 @@ it('configures authorization page and status table visibility', function () {
 
     $plugin
         ->authorize(fn (): bool => false)
-        ->usingPage('App\\Filament\\Pages\\CustomBackups')
+        ->usingPage(CustomBackupsPage::class)
         ->statusListRecordsTable(false);
 
     expect($plugin->isAuthorized())->toBeFalse()
-        ->and($plugin->getPage())->toBe('App\\Filament\\Pages\\CustomBackups')
+        ->and($plugin->getPage())->toBe(CustomBackupsPage::class)
         ->and($plugin->hasStatusListRecordsTable())->toBeFalse();
 
     $plugin->boot(Panel::make()->id('test'));
@@ -118,5 +174,6 @@ it('configures navigation defaults values closures and backed enums', function (
         ->and($plugin->getNavigationSort())->toBe(25)
         ->and($plugin->getNavigationIcon())->toBe(TestNavigationIcon::Backups->value)
         ->and($plugin->getNavigationLabel())->toBe('Snapshots')
-        ->and(FilamentSpatieLaravelBackupPlugin::make()->navigationGroup(null)->getNavigationGroup())->toBeNull();
+        ->and(FilamentSpatieLaravelBackupPlugin::make()->navigationGroup(null)->getNavigationGroup())->toBeNull()
+        ->and(FilamentSpatieLaravelBackupPlugin::make()->navigationIcon(fn (): ?string => null)->getNavigationIcon())->toBeNull();
 });

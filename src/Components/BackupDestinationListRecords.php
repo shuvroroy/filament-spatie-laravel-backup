@@ -13,6 +13,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -23,6 +24,7 @@ use Livewire\Component;
 use RuntimeException;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackup;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BackupDestinationListRecords extends Component implements HasActions, HasForms, HasTable
 {
@@ -41,7 +43,9 @@ class BackupDestinationListRecords extends Component implements HasActions, HasF
 
     public function render(): View
     {
-        return view('filament-spatie-backup::components.backup-destination-list-records');
+        return app(ViewFactory::class)->make(
+            'filament-spatie-backup::components.backup-destination-list-records',
+        );
     }
 
     public function table(Table $table): Table
@@ -80,29 +84,32 @@ class BackupDestinationListRecords extends Component implements HasActions, HasF
                             filled($filteredType),
                             fn (Collection $data): Collection => $data->where('type', $filteredType),
                         )
-                        ->sortByDesc('date')
-                        ->when(
-                            $plugin->getBackupLimit() !== null,
-                            fn (Collection $data): Collection => $data->take($plugin->getBackupLimit()),
-                        )
-                        ->when(
-                            filled($sortColumn),
-                            fn (Collection $data): Collection => $data->sortBy(
-                                $sortColumn,
-                                SORT_NATURAL,
-                                $sortDirection === 'desc',
+                        ->sortByDesc('date');
+
+                    $backupLimit = $plugin->getBackupLimit();
+
+                    if ($backupLimit !== null) {
+                        $data = $data->take($backupLimit);
+                    }
+
+                    if ($sortColumn !== null && $sortColumn !== '') {
+                        $data = $data->sortBy(
+                            $sortColumn,
+                            SORT_NATURAL,
+                            $sortDirection === 'desc',
+                        );
+                    }
+
+                    if ($search !== null && $search !== '') {
+                        $data = $data->filter(
+                            fn (array $record): bool => Str::contains(
+                                Str::lower($record['path'] . $record['disk'] . $record['date']),
+                                Str::lower($search),
                             ),
-                        )
-                        ->when(
-                            filled($search),
-                            fn (Collection $data): Collection => $data->filter(
-                                fn (array $record): bool => Str::contains(
-                                    Str::lower($record['path'] . $record['disk'] . $record['date']),
-                                    Str::lower($search),
-                                ),
-                            ),
-                        )
-                        ->values();
+                        );
+                    }
+
+                    $data = $data->values();
 
                     $page = max((int) $page, 1);
                     $recordsPerPage = $recordsPerPage === 'all'
@@ -150,7 +157,7 @@ class BackupDestinationListRecords extends Component implements HasActions, HasF
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.download'))
                     ->icon('heroicon-o-arrow-down-tray')
                     ->visible(auth()->user()?->can('download-backup') ?? false)
-                    ->action(fn (array $record) => Storage::disk($record['disk'])->download($record['path'])),
+                    ->action($this->downloadBackup(...)),
 
                 Action::make('delete')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.delete'))
@@ -159,26 +166,33 @@ class BackupDestinationListRecords extends Component implements HasActions, HasF
                     ->requiresConfirmation()
                     ->color('danger')
                     ->modalIcon('heroicon-o-trash')
-                    ->action(function (array $record) {
-                        if (! Storage::disk($record['disk'])->delete($record['path'])) {
-                            throw new RuntimeException('The backup could not be deleted.');
-                        }
-
-                        FilamentSpatieLaravelBackup::clearCachedBackupDestinationData(
-                            $record['disk'],
-                            config('backup.backup.name'),
-                        );
-                        $this->resetTable();
-
-                        Notification::make()
-                            ->title(__('filament-spatie-backup::backup.pages.backups.messages.backup_delete_success'))
-                            ->success()
-                            ->send();
-                    }),
-            ])
-            ->toolbarActions([
-                // ...
+                    ->action($this->deleteBackup(...)),
             ]);
+    }
+
+    /** @param array{disk: string, path: string, ...} $record */
+    protected function downloadBackup(array $record): StreamedResponse
+    {
+        return Storage::disk($record['disk'])->download($record['path']);
+    }
+
+    /** @param array{disk: string, path: string, ...} $record */
+    protected function deleteBackup(array $record): void
+    {
+        if (! Storage::disk($record['disk'])->delete($record['path'])) {
+            throw new RuntimeException('The backup could not be deleted.');
+        }
+
+        FilamentSpatieLaravelBackup::clearBackupDestinationCache(
+            $record['disk'],
+            config()->string('backup.backup.name'),
+        );
+        $this->resetTable();
+
+        Notification::make()
+            ->title(__('filament-spatie-backup::backup.pages.backups.messages.backup_delete_success'))
+            ->success()
+            ->send();
     }
 
     #[Computed]

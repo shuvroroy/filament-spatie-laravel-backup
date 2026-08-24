@@ -2,15 +2,31 @@
 
 namespace ShuvroRoy\FilamentSpatieLaravelBackup\Support;
 
+use Exception;
+use Illuminate\Contracts\Filesystem\Factory;
 use RuntimeException;
 use Spatie\Backup\BackupDestination\BackupCollection;
 use Spatie\Backup\BackupDestination\BackupDestination;
 
-class CachedBackupDestination extends BackupDestination
+final class CachedBackupDestination extends BackupDestination
 {
     protected ?BackupCollection $cachedBackups = null;
 
     protected ?bool $cachedReachability = null;
+
+    public static function create(string $diskName, string $backupName): self
+    {
+        try {
+            $disk = app(Factory::class)->disk($diskName);
+
+            return new self($disk, $backupName, $diskName);
+        } catch (Exception $exception) {
+            $destination = new self(null, $backupName, $diskName);
+            $destination->connectionError = $exception;
+
+            return $destination;
+        }
+    }
 
     public function useSnapshot(
         BackupCollection $backups,

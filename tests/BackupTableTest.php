@@ -90,6 +90,10 @@ it('searches sorts and returns all matching custom records', function () {
         ->and($records->items()[0]['path'])->toBe('test-app/2026-08-21-00-00-00.zip');
 });
 
+/**
+ * @param  array<string, mixed>  $filters
+ * @return LengthAwarePaginator<int, array{key: string, disk: string, path: string, type: string, date: string, size: string}>
+ */
 function backupTableRecords(
     FilamentSpatieLaravelBackupPlugin $plugin,
     int $page = 1,
@@ -107,7 +111,13 @@ function backupTableRecords(
 
     $component = app(BackupDestinationListRecords::class);
     $table = $component->table(Table::make($component));
-    $records = $table->getDataSource()(
+    $dataSource = $table->getDataSource();
+
+    if ($dataSource === null) {
+        throw new LogicException('The backup table has no data source.');
+    }
+
+    $records = $dataSource(
         $sortColumn,
         $sortDirection,
         $search,
@@ -116,7 +126,9 @@ function backupTableRecords(
         $recordsPerPage,
     );
 
-    expect($records)->toBeInstanceOf(LengthAwarePaginator::class);
+    if (! $records instanceof LengthAwarePaginator) {
+        throw new UnexpectedValueException('The backup table data source did not return a paginator.');
+    }
 
     return $records;
 }

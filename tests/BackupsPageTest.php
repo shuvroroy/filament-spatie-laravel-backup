@@ -1,5 +1,7 @@
 <?php
 
+use Filament\Actions\Action;
+use Filament\Clusters\Cluster;
 use Filament\Facades\Filament;
 use Filament\Panel;
 use Illuminate\Support\Facades\Bus;
@@ -9,11 +11,17 @@ use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups;
 
 class TestableBackupsPage extends Backups
 {
+    /** @return list<Action> */
     public function actionsForTesting(): array
     {
-        return $this->getActions();
+        return array_values(array_filter(
+            $this->getHeaderActions(),
+            fn (mixed $action): bool => $action instanceof Action,
+        ));
     }
 }
+
+class BackupsPageTestCluster extends Cluster {}
 
 it('dispatches backup jobs immediately to the configured queue', function () {
     Bus::fake();
@@ -78,7 +86,7 @@ it('hides the navigation group when the page belongs to a cluster', function () 
     $panel = Panel::make()
         ->default()
         ->id('clustered')
-        ->plugin(FilamentSpatieLaravelBackupPlugin::make()->cluster('App\\Filament\\Clusters\\System'));
+        ->plugin(FilamentSpatieLaravelBackupPlugin::make()->cluster(BackupsPageTestCluster::class));
 
     Filament::registerPanel($panel);
     Filament::setCurrentPanel($panel);

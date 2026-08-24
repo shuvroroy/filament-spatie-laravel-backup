@@ -44,7 +44,13 @@ it('renders and configures both backup record components', function () {
     $statuses = app(BackupDestinationStatusListRecords::class);
     $backupTable = $backups->table(Table::make($backups));
     $statusTable = $statuses->table(Table::make($statuses));
-    $statusRecords = $statusTable->getDataSource()();
+    $statusDataSource = $statusTable->getDataSource();
+
+    if ($statusDataSource === null) {
+        throw new LogicException('The status table has no data source.');
+    }
+
+    $statusRecords = $statusDataSource();
 
     expect($backups->render()->name())
         ->toBe('filament-spatie-backup::components.backup-destination-list-records')
@@ -56,8 +62,9 @@ it('renders and configures both backup record components', function () {
         ->and(array_keys($backupTable->getFilters()))->toBe(['disk', 'type'])
         ->and($backupTable->hasDeferredFilters())->toBeFalse()
         ->and($statusTable->getColumns())->toHaveCount(6)
-        ->and($statusRecords)->toHaveCount(1)
-        ->and($statusRecords[0]['amount'])->toBe(1);
+        ->and($statusRecords)->toBe(
+            FilamentSpatieLaravelBackup::getBackupDestinationStatusData(cacheDuration: 0),
+        );
 });
 
 it('downloads and deletes a backup through its table actions', function () {
@@ -66,16 +73,15 @@ it('downloads and deletes a backup through its table actions', function () {
 
     $component = app(BackupDestinationListRecords::class);
     $table = $component->table(Table::make($component));
-    $actions = collect($table->getRecordActions())
-        ->filter(fn (Action $action): bool => in_array($action->getName(), ['download', 'delete'], true))
-        ->keyBy(fn (Action $action): string => $action->getName());
+    $download = backupRecordAction($table, 'download');
+    $delete = backupRecordAction($table, 'delete');
     $record = FilamentSpatieLaravelBackup::getBackupDestinationData('backups', cacheDuration: 60)[0];
 
-    expect($actions['download']->isVisible())->toBeFalse()
-        ->and($actions['delete']->isVisible())->toBeFalse()
-        ->and(($actions['download']->getActionFunction())($record))->not->toBeNull();
+    expect($download->isVisible())->toBeFalse()
+        ->and($delete->isVisible())->toBeFalse()
+        ->and(runBackupRecordAction($download, $record))->not->toBeNull();
 
-    ($actions['delete']->getActionFunction())($record);
+    runBackupRecordAction($delete, $record);
 
     expect(Storage::disk('backups')->exists($path))->toBeFalse()
         ->and(FilamentSpatieLaravelBackup::getBackupDestinationData('backups', cacheDuration: 60))
@@ -92,11 +98,33 @@ it('throws when a table action cannot delete a backup', function () {
 
     $component = app(BackupDestinationListRecords::class);
     $table = $component->table(Table::make($component));
-    $delete = collect($table->getRecordActions())
-        ->first(fn (Action $action): bool => $action->getName() === 'delete');
+    $delete = backupRecordAction($table, 'delete');
 
-    ($delete->getActionFunction())([
+    runBackupRecordAction($delete, [
         'disk' => 'backups',
         'path' => 'test-app/failed.zip',
     ]);
 })->throws(RuntimeException::class, 'The backup could not be deleted.');
+
+function backupRecordAction(Table $table, string $name): Action
+{
+    foreach ($table->getRecordActions() as $action) {
+        if ($action instanceof Action && $action->getName() === $name) {
+            return $action;
+        }
+    }
+
+    throw new LogicException("The [{$name}] backup action is not configured.");
+}
+
+/** @param array<string, string> $record */
+function runBackupRecordAction(Action $action, array $record): mixed
+{
+    $callback = $action->getActionFunction();
+
+    if ($callback === null) {
+        throw new LogicException("The [{$action->getName()}] backup action has no callback.");
+    }
+
+    return $callback($record);
+}

@@ -3,10 +3,11 @@
 namespace ShuvroRoy\FilamentSpatieLaravelBackup\Pages;
 
 use Filament\Actions\Action;
+use Filament\Clusters\Cluster;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
-use ShuvroRoy\FilamentSpatieLaravelBackup\Enums\Option;
+use ShuvroRoy\FilamentSpatieLaravelBackup\Enums\BackupType;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Jobs\CreateBackupJob;
 
@@ -19,6 +20,7 @@ class Backups extends Page
         return FilamentSpatieLaravelBackupPlugin::get()->getHeading();
     }
 
+    /** @return class-string<Cluster>|null */
     public static function getCluster(): ?string
     {
         return FilamentSpatieLaravelBackupPlugin::get()->getClusterName();
@@ -48,7 +50,7 @@ class Backups extends Page
         return FilamentSpatieLaravelBackupPlugin::get()->getNavigationIcon();
     }
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Action::make('Create Backup')
@@ -64,12 +66,12 @@ class Backups extends Page
         $this->dispatch('open-modal', id: 'backup-option');
     }
 
-    public function create(string $option = ''): void
+    public function create(string $type = BackupType::DATABASE_AND_FILES->value): void
     {
         /** @var FilamentSpatieLaravelBackupPlugin $plugin */
         $plugin = filament()->getPlugin('filament-spatie-backup');
 
-        CreateBackupJob::dispatch(Option::from($option), $plugin->getTimeout())
+        CreateBackupJob::dispatch(BackupType::from($type), $plugin->getTimeout())
             ->onConnection($plugin->getQueueConnection())
             ->onQueue($plugin->getQueue());
 
