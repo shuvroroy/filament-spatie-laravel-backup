@@ -5,9 +5,24 @@
 [![Total Downloads](https://poser.pugx.org/shuvroroy/filament-spatie-laravel-backup/downloads)](https://packagist.org/packages/shuvroroy/filament-spatie-laravel-backup)
 [![License](https://poser.pugx.org/shuvroroy/filament-spatie-laravel-backup/license)](https://packagist.org/packages/shuvroroy/filament-spatie-laravel-backup)
 
-This package provides a Filament page that you can create backup of your application. You'll find installation instructions and full documentation on [spatie/laravel-backup](https://spatie.be/docs/laravel-backup/v8/introduction).
+This package adds a Filament page for creating, monitoring, downloading, and deleting application backups. It uses [spatie/laravel-backup](https://spatie.be/docs/laravel-backup/v10/introduction) to perform and monitor the backups.
 
 <img width="1481" alt="Screenshot 2023-08-05 at 2 42 10 PM" src="https://github.com/shuvroroy/filament-spatie-laravel-backup/assets/21066418/68fe1c0b-a130-41ce-8c7f-e5182d743225">
+
+## Requirements
+
+Version 4 supports the following stack:
+
+| Dependency | Supported versions |
+| --- | --- |
+| PHP | 8.3–8.5 |
+| Laravel | 12–13 |
+| Filament | 4–5 |
+| Spatie Laravel Backup | 9–10 |
+
+See the [Laravel support policy](https://laravel.com/docs/12.x/releases#support-policy), [PHP supported versions](https://www.php.net/supported-versions.php), and [Filament support policy](https://filamentphp.com/docs/5.x/introduction/version-support-policy) for upstream support timelines.
+
+Upgrading from v3? Follow the [v4 upgrade guide](UPGRADE.md) before changing the package constraint.
 
 ## Installation
 
@@ -15,6 +30,12 @@ You can install the package via composer:
 
 ```bash
 composer require shuvroroy/filament-spatie-laravel-backup
+```
+
+Publish and review Spatie Laravel Backup's configuration. This creates `config/backup.php`, where you define the application name, source files and databases, destination disks, notifications, monitoring, and cleanup strategy:
+
+```bash
+php artisan vendor:publish --provider="Spatie\Backup\BackupServiceProvider" --tag="backup-config"
 ```
 
 Publish the package's assets:
@@ -64,32 +85,25 @@ return $panel->plugins([
 
 Do not pass multiple plugins as arguments to `plugin()`. That method accepts one plugin, so later arguments will not be registered.
 
-If you want to override the default `Backups` page icon, heading then you can extend the page class and override the `navigationIcon` property and `getHeading` method and so on.
+Use the plugin's navigation methods below to customise the icon, label, group, or sort order. Extend the page only when you need to customise page behaviour, such as its heading:
 
 ```php
 <?php
 
 namespace App\Filament\Pages;
 
-use Illuminate\Contracts\Support\Htmlable;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups as BaseBackups;
 
 class Backups extends BaseBackups
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-cpu-chip';
-
-    public function getHeading(): string | Htmlable
+    public function getHeading(): string
     {
         return 'Application Backups';
     }
-
-    public static function getNavigationGroup(): ?string
-    {
-        return 'Core';
-    }
 }
 ```
-Then register the extended page class on `AdminPanelProvider` class.
+
+Then register the extended page class in `AdminPanelProvider`:
 
 ```php
 <?php
@@ -115,21 +129,51 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
-## Permissions Setup (for Creating, Downloading & Deleting backups)
+## Permissions
 
-If you're using [Spatie Laravel Permission](https://spatie.be/docs/laravel-permission) or [Filament Shield](https://github.com/bezhansalleh/filament-shield), you need to manually define the permissions used by this backup panel.
+The package checks these Laravel Gate abilities before showing its backup actions:
 
-### Required Permissions
+- `create-backup` — create a new backup.
+- `download-backup` — download an existing backup.
+- `delete-backup` — delete an existing backup.
 
-- `download-backup` – Allows downloading existing backups.
-- `delete-backup` – Allows deleting backups from the panel.
-- `create-backup` – Allows creating new backups from the panel.
+Define them with plain Laravel gates in a service provider if you do not use a permissions package. Replace the example condition with your application's authorization rule:
+
+```php
+<?php
+
+namespace App\Providers;
+
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function boot(): void
+    {
+        Gate::define('create-backup', fn (User $user): bool => (bool) $user->is_admin);
+        Gate::define('download-backup', fn (User $user): bool => (bool) $user->is_admin);
+        Gate::define('delete-backup', fn (User $user): bool => (bool) $user->is_admin);
+    }
+}
+```
+
+To restrict access to the entire page, configure the plugin separately:
+
+```php
+FilamentSpatieLaravelBackupPlugin::make()
+    ->authorize(fn (): bool => auth()->user()?->can('view-backups') ?? false)
+```
+
+If you use [Spatie Laravel Permission](https://spatie.be/docs/laravel-permission) or [Filament Shield](https://github.com/bezhansalleh/filament-shield), register the same three action permissions with that package.
 
 ### Seeder Example
 
 You can create a seeder to register these permissions and assign them to a role:
 
 ```php
+<?php
 
 namespace Database\Seeders;
 
@@ -141,7 +185,6 @@ class BackupPermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create permissions
         $permissions = [
             'download-backup',
             'delete-backup',
@@ -152,14 +195,12 @@ class BackupPermissionSeeder extends Seeder
             Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // Assign to a role (optional)
         $role = Role::firstOrCreate(['name' => 'backup']);
         $role->givePermissionTo($permissions);
 
-        // Assign role to a user (optional)
-        $user = \App\Models\User::find(1); // Change ID as needed
-        
-        if ($user && !$user->hasRole('backup')) {
+        $user = \App\Models\User::find(1);
+
+        if ($user && ! $user->hasRole('backup')) {
             $user->assignRole('backup');
         }
     }
@@ -171,9 +212,6 @@ Run the seeder using:
 ```bash
 php artisan db:seed --class=BackupPermissionSeeder
 ```
-
-After this, users with the `backup` role will have full access to the backup panel.
-
 
 ## Customising navigation
 
@@ -253,15 +291,15 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
-Pass `null` to disable polling. The older `usingPolingInterval()` spelling remains available for backwards compatibility.
+Pass `null` to disable polling.
 
 ## Large or remote backup destinations
 
-Backup metadata is cached for 30 seconds by default and the table is paginated. You can tune the cache, show only the newest backups, or hide the health summary when a remote disk is especially slow:
+Backup metadata is cached for 30 seconds by default and the table is paginated. You can tune the cache, show only the newest backups, or hide the health summary when a remote disk is especially slow.
 
 Backups are listed newest first. Selecting a disk filter queries and displays only that configured destination, avoiding unnecessary reads from the other backup disks.
 
-The Disk and Backup Type filters update the table immediately without an Apply button. Backup type is inferred from the filename: names containing `only-db` are shown as **Only DB**, names containing `only-files` as **Only Files**, and all other names as **DB & Files**.
+The Disk and Backup Type filters update the table immediately without an Apply button. Backup type is inferred from the filename prefix: names beginning with `only-db-` are shown as **Only DB**, names beginning with `only-files-` as **Only Files**, and all other names as **DB & Files**. A marker elsewhere in a filename is not treated as a backup type.
 
 ```php
 FilamentSpatieLaravelBackupPlugin::make()
@@ -271,6 +309,23 @@ FilamentSpatieLaravelBackupPlugin::make()
 ```
 
 Set `cacheDuration(0)` to disable metadata caching, or `backupLimit(null)` to display every backup.
+
+## Backup type API
+
+Manual backup creation, filename detection, and table filtering use the same enum values:
+
+```php
+use ShuvroRoy\FilamentSpatieLaravelBackup\Enums\BackupType;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackup;
+
+BackupType::ONLY_DATABASE->value;      // only-db
+BackupType::ONLY_FILES->value;         // only-files
+BackupType::DATABASE_AND_FILES->value; // db-and-files
+
+$type = FilamentSpatieLaravelBackup::detectBackupType($backupPath); // BackupType
+```
+
+Extensions that mutate backup files can invalidate one known destination with `clearBackupDestinationCache($disk, $backupName)`, or every configured destination with `clearBackupDestinationCaches()`.
 
 ## Customising the queue
 
@@ -300,7 +355,9 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
-Use a non-`sync` queue connection and run a worker for production backups. A `sync` connection still performs the backup inside the web request. Failed backup commands now fail the queued job, so they appear in the configured failed-jobs store and worker logs.
+> **Production queue requirement:** configure a non-`sync` connection and run a queue worker. With Laravel's default `sync` connection, the backup runs inside the Livewire web request and can still exceed the web server or proxy timeout. The job timeout only mitigates this; it does not make a synchronous backup asynchronous.
+
+Failed backup commands fail the queued job, so asynchronous workers can retry them and record them in the configured failed-jobs store.
 
 ## Customising the timeout
 
@@ -329,7 +386,7 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
-The value is applied to both PHP's execution time limit and Laravel's per-job queue timeout. When no value is configured, the PHP and queue-worker defaults apply. For more details refer to the [set_time_limit](https://www.php.net/manual/en/function.set-time-limit.php) function.
+The value is applied to Laravel's per-job queue timeout. It is also passed to the backup command and PHP's execution time limit when `set_time_limit()` is available. On hosts where that function is disabled, the package safely leaves PHP's execution limit unchanged. When no value is configured, the PHP and queue-worker defaults apply. For more details, see [`set_time_limit()`](https://www.php.net/manual/en/function.set-time-limit.php).
 
 You can also disable the timeout altogether to let the job run as long as needed:
 
