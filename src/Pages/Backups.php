@@ -19,8 +19,16 @@ class Backups extends Page
         return FilamentSpatieLaravelBackupPlugin::get()->getHeading();
     }
 
+    public static function getCluster(): ?string
+    {
+        return FilamentSpatieLaravelBackupPlugin::getClusterName();
+    }
+
     public static function getNavigationGroup(): string | \UnitEnum | null
     {
+        if (static::getCluster() !== null) {
+            return null;
+        }
         return FilamentSpatieLaravelBackupPlugin::get()->getNavigationGroup();
     }
 

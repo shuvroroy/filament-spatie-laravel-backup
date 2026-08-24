@@ -24,6 +24,8 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 
     protected ?int $timeout = null;
 
+    protected static ?string $clusterName = null;
+
     protected Closure | string | \BackedEnum $navigationIcon = 'heroicon-o-cog';
 
     protected string | Closure | null $navigationLabel = null;
@@ -152,6 +154,17 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
     public function getHeading(): string
     {
         return __('filament-spatie-backup::backup.pages.backups.heading');
+    }
+
+    public function cluster(?string $cluster): static
+    {
+        static::$clusterName = $cluster;
+        return $this;
+    }
+
+    public static function getClusterName(): ?string
+    {
+        return static::$clusterName;
     }
 
     public function navigationGroup(string | Closure | null $navigationGroup): static
