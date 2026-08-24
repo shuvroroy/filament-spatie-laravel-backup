@@ -68,10 +68,21 @@ class Backups extends Page
 
     public function create(string $type = BackupType::DATABASE_AND_FILES->value): void
     {
+        $backupType = BackupType::tryFrom($type);
+
+        if ($backupType === null) {
+            Notification::make()
+                ->title(__('filament-spatie-backup::backup.pages.backups.modal.label'))
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         /** @var FilamentSpatieLaravelBackupPlugin $plugin */
         $plugin = filament()->getPlugin('filament-spatie-backup');
 
-        CreateBackupJob::dispatch(BackupType::from($type), $plugin->getTimeout())
+        CreateBackupJob::dispatch($backupType, $plugin->getTimeout())
             ->onConnection($plugin->getQueueConnection())
             ->onQueue($plugin->getQueue());
 

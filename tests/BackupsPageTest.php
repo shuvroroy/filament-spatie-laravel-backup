@@ -3,6 +3,7 @@
 use Filament\Actions\Action;
 use Filament\Clusters\Cluster;
 use Filament\Facades\Filament;
+use Filament\Notifications\Notification;
 use Filament\Panel;
 use Illuminate\Support\Facades\Bus;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
@@ -48,6 +49,27 @@ it('dispatches backup jobs immediately to the configured queue', function () {
         && $job->timeout === 120
     );
     Bus::assertNotDispatchedAfterResponse(CreateBackupJob::class);
+});
+
+it('rejects invalid backup types without dispatching a job', function () {
+    Bus::fake();
+
+    $panel = Panel::make()
+        ->default()
+        ->id('test')
+        ->plugin(FilamentSpatieLaravelBackupPlugin::make());
+
+    Filament::registerPanel($panel);
+    Filament::setCurrentPanel($panel);
+
+    app(Backups::class)->create('invalid-type');
+
+    Bus::assertNotDispatched(CreateBackupJob::class);
+    Notification::assertNotified(
+        Notification::make()
+            ->title(__('filament-spatie-backup::backup.pages.backups.modal.label'))
+            ->danger(),
+    );
 });
 
 it('exposes configured page navigation authorization and actions', function () {

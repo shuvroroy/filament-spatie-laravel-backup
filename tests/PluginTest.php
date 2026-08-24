@@ -156,7 +156,7 @@ it('configures authorization page and status table visibility', function () {
     $plugin->boot(Panel::make()->id('test'));
 });
 
-it('configures navigation defaults values closures and backed enums', function () {
+it('configures navigation default values closures and backed enums', function () {
     $plugin = FilamentSpatieLaravelBackupPlugin::make();
 
     expect($plugin->getNavigationGroup())->toBe('Settings')
