@@ -396,7 +396,7 @@ This package creates, lists, downloads, and deletes backups. It intentionally do
 
 ## Upgrading
 
-Please see the [upgrade guide](UPGRADE.md) for version-specific upgrade instructions.
+Existing v3 applications should review the [v4 upgrade guide](UPGRADE.md) before updating. It covers the new polling and cache defaults, paginated backup listings, queue execution timing, and failed-job behavior. The same guide also contains instructions for earlier major versions.
 
 ## Testing
 
