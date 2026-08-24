@@ -49,7 +49,7 @@ return [
 
             'messages' => [
                 'backup_success' => 'Erstelle eine neue Sicherung im Hintergrund.',
-                'backup_delete_success' => 'Lösche die Sicherung im Hintergrund.',
+                'backup_delete_success' => 'Die Sicherung wurde erfolgreich gelöscht.',
             ],
 
             'modal' => [

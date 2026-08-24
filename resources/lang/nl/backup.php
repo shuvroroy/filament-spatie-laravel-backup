@@ -49,7 +49,7 @@ return [
 
             'messages' => [
                 'backup_success' => 'Backup maken in de achtergrond.',
-                'backup_delete_success' => 'Backup verwijderen in de achtergrond.',
+                'backup_delete_success' => 'De back-up is succesvol verwijderd.',
             ],
 
             'modal' => [

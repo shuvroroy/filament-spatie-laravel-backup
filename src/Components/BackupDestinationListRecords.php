@@ -180,7 +180,11 @@ class BackupDestinationListRecords extends Component implements HasActions, HasF
     protected function deleteBackup(array $record): void
     {
         if (! Storage::disk($record['disk'])->delete($record['path'])) {
-            throw new RuntimeException('The backup could not be deleted.');
+            throw new RuntimeException(sprintf(
+                'The backup [%s] could not be deleted from disk [%s].',
+                $record['path'],
+                $record['disk'],
+            ));
         }
 
         FilamentSpatieLaravelBackup::clearBackupDestinationCache(

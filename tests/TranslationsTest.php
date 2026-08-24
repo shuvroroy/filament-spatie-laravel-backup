@@ -23,3 +23,10 @@ it('includes the Ukrainian translation requested in issue 67', function () {
         ->and(data_get($translation, 'components.backup_destination_list.table.filters.type'))
         ->toBe('Тип резервної копії');
 });
+
+it('reports synchronous backup deletion as completed', function () {
+    $translation = require __DIR__ . '/../resources/lang/en/backup.php';
+
+    expect(data_get($translation, 'pages.backups.messages.backup_delete_success'))
+        ->toBe('Backup deleted successfully.');
+});

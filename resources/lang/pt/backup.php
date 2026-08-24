@@ -49,7 +49,7 @@ return [
 
             'messages' => [
                 'backup_success' => 'A criar uma nova cópia de segurança em segundo plano.',
-                'backup_delete_success' => 'A eliminar esta cópia de segurança em segundo plano.',
+                'backup_delete_success' => 'A cópia de segurança foi eliminada com sucesso.',
             ],
 
             'modal' => [

@@ -104,7 +104,10 @@ it('throws when a table action cannot delete a backup', function () {
         'disk' => 'backups',
         'path' => 'test-app/failed.zip',
     ]);
-})->throws(RuntimeException::class, 'The backup could not be deleted.');
+})->throws(
+    RuntimeException::class,
+    'The backup [test-app/failed.zip] could not be deleted from disk [backups].',
+);
 
 function backupRecordAction(Table $table, string $name): Action
 {

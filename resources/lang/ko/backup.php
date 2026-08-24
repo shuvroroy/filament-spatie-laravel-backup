@@ -49,7 +49,7 @@ return [
 
             'messages' => [
                 'backup_success' => '새 백업을 백그라운드에서 생성하는 중입니다.',
-                'backup_delete_success' => '이 백업을 백그라운드에서 삭제하는 중입니다.',
+                'backup_delete_success' => '백업이 성공적으로 삭제되었습니다.',
             ],
 
             'modal' => [

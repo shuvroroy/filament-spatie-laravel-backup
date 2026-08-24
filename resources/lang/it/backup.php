@@ -49,7 +49,7 @@ return [
 
             'messages' => [
                 'backup_success' => 'Creazione di un nuovo backup in background.',
-                'backup_delete_success' => 'Eliminazione di questo backup in background.',
+                'backup_delete_success' => 'Backup eliminato correttamente.',
             ],
 
             'modal' => [
