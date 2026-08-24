@@ -215,7 +215,7 @@ php artisan db:seed --class=BackupPermissionSeeder
 
 ## Customising navigation
 
-You can customise the navigation icon, label, group, and sort order directly on the plugin without extending the page class:
+The default navigation icon is `heroicon-o-archive-box-arrow-down`. You can customise the icon, label, group, and sort order directly on the plugin without extending the page class:
 
 ```php
 <?php
@@ -234,7 +234,7 @@ class AdminPanelProvider extends PanelProvider
             // ...
             ->plugin(
                 FilamentSpatieLaravelBackupPlugin::make()
-                    ->navigationIcon('heroicon-o-cpu-chip')
+                    ->navigationIcon('heroicon-o-server-stack')
                     ->navigationLabel('Backups')
                     ->navigationGroup('Settings')
                     ->navigationSort(3)

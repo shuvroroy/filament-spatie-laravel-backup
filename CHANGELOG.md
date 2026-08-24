@@ -15,6 +15,7 @@ All notable changes to `filament-spatie-laravel-backup` will be documented in th
 - Raised support to PHP 8.3–8.5, Laravel 12–13, Filament 4–5, and Spatie Laravel Backup 9–10.
 - Backups are listed newest first, and a selected disk reads only that destination.
 - Backup type markers are recognized only as `only-db-` and `only-files-` filename prefixes. Combined backups consistently use `db-and-files`.
+- The default navigation icon is now `heroicon-o-archive-box-arrow-down`.
 - Manual backups are dispatched immediately, command failures fail the queue job, and configured timeouts are exposed to Laravel workers.
 - Replaced Filament's deprecated `getActions()` page hook with `getHeaderActions()`.
 - Raised static analysis from PHPStan level 4 to the maximum level.

@@ -161,7 +161,7 @@ it('configures navigation defaults values closures and backed enums', function (
 
     expect($plugin->getNavigationGroup())->toBe('Settings')
         ->and($plugin->getNavigationSort())->toBe(1)
-        ->and($plugin->getNavigationIcon())->toBe('heroicon-o-cog')
+        ->and($plugin->getNavigationIcon())->toBe('heroicon-o-archive-box-arrow-down')
         ->and($plugin->getNavigationLabel())->toBe('Backups');
 
     $plugin

@@ -40,7 +40,7 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
     /** @var class-string<Cluster>|null */
     protected ?string $clusterName = null;
 
-    protected Closure | string | BackedEnum $navigationIcon = 'heroicon-o-cog';
+    protected Closure | string | BackedEnum $navigationIcon = 'heroicon-o-archive-box-arrow-down';
 
     protected string | Closure | null $navigationLabel = null;
 
