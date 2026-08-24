@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => 'Ổ đĩa',
+                    'type' => 'Loại sao lưu',
                 ],
             ],
         ],

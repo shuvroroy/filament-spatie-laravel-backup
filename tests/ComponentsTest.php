@@ -53,6 +53,8 @@ it('renders and configures both backup record components', function () {
         ->and($backups->interval())->toBe('45s')
         ->and($statuses->interval())->toBe('45s')
         ->and($backupTable->getColumns())->toHaveCount(4)
+        ->and(array_keys($backupTable->getFilters()))->toBe(['disk', 'type'])
+        ->and($backupTable->hasDeferredFilters())->toBeFalse()
         ->and($statusTable->getColumns())->toHaveCount(6)
         ->and($statusRecords)->toHaveCount(1)
         ->and($statusRecords[0]['amount'])->toBe(1);

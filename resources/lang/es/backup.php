@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => 'Disco',
+                    'type' => 'Tipo de copia de seguridad',
                 ],
             ],
         ],

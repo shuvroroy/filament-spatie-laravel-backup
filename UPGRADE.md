@@ -17,6 +17,7 @@ Then review the following compatibility and behavioral changes before deploying 
 - Backup metadata is cached for 30 seconds by default instead of 4 seconds. Use `cacheDuration(4)` to retain the previous duration or `cacheDuration(0)` to disable metadata caching.
 - Backup records are listed newest first and paginated with 10 records per page by default. The available page sizes are 10, 25, and 50.
 - Selecting a disk filter now queries and displays only that configured destination.
+- Disk and Backup Type filters now apply immediately. Backup types are inferred from the `only-db` and `only-files` filename markers; unmarked filenames are treated as database-and-files backups.
 - IDs returned by `getBackupDestinationStatusData()` are now deterministic SHA-1 strings and the records use deterministic ordering. Update integrations or tests that rely on the previous numeric/index IDs or ordering.
 
 ### Queue execution and failures

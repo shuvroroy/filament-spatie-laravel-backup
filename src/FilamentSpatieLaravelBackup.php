@@ -46,7 +46,34 @@ class FilamentSpatieLaravelBackup
     }
 
     /**
-     * @return array<int, array{key: string, disk: string, path: string, date: string, size: string}>
+     * @return array<string, string>
+     */
+    public static function getFilterTypes(): array
+    {
+        return [
+            'only-db' => __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_db'),
+            'only-files' => __('filament-spatie-backup::backup.pages.backups.modal.buttons.only_files'),
+            'db-and-files' => __('filament-spatie-backup::backup.pages.backups.modal.buttons.db_and_files'),
+        ];
+    }
+
+    public static function detectBackupType(string $path): string
+    {
+        $filename = basename($path);
+
+        if (str_contains($filename, 'only-db')) {
+            return 'only-db';
+        }
+
+        if (str_contains($filename, 'only-files')) {
+            return 'only-files';
+        }
+
+        return 'db-and-files';
+    }
+
+    /**
+     * @return array<int, array{key: string, disk: string, path: string, type: string, date: string, size: string}>
      */
     public static function getBackupDestinationData(
         string $disk,
@@ -64,6 +91,7 @@ class FilamentSpatieLaravelBackup
                     'key' => sha1($disk . "\0" . $backup['path']),
                     'disk' => $disk,
                     'path' => $backup['path'],
+                    'type' => static::detectBackupType($backup['path']),
                     'date' => Carbon::createFromTimestamp($backup['timestamp'])
                         ->setTimezone(config('app.timezone'))
                         ->format('Y-m-d H:i:s'),

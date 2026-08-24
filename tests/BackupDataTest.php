@@ -103,6 +103,27 @@ it('resolves disk filters and labels from the request and configuration', functi
     expect(FilamentSpatieLaravelBackup::getDisk())->toBe('cold-storage');
 });
 
+it('detects backup types from filenames and provides translated filter options', function () {
+    Storage::fake('backups');
+    Storage::disk('backups')->put('test-app/only-db-2026-08-24-02-00-00.zip', 'database');
+    Storage::disk('backups')->put('test-app/only-files-2026-08-24-01-00-00.zip', 'files');
+    Storage::disk('backups')->put('test-app/2026-08-24-00-00-00.zip', 'all');
+
+    $records = collect(FilamentSpatieLaravelBackup::getBackupDestinationData('backups', cacheDuration: 0))
+        ->keyBy('path');
+
+    expect($records['test-app/only-db-2026-08-24-02-00-00.zip']['type'])->toBe('only-db')
+        ->and($records['test-app/only-files-2026-08-24-01-00-00.zip']['type'])->toBe('only-files')
+        ->and($records['test-app/2026-08-24-00-00-00.zip']['type'])->toBe('db-and-files')
+        ->and(FilamentSpatieLaravelBackup::detectBackupType('only-db-app/2026-08-24-00-00-00.zip'))
+        ->toBe('db-and-files')
+        ->and(FilamentSpatieLaravelBackup::getFilterTypes())->toBe([
+            'only-db' => 'Only DB',
+            'only-files' => 'Only Files',
+            'db-and-files' => 'DB & Files',
+        ]);
+});
+
 it('formats backup dates in the application timezone', function () {
     config()->set('app.timezone', 'Asia/Dhaka');
     Storage::fake('backups');

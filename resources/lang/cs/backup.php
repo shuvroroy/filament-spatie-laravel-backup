@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => 'Disk',
+                    'type' => 'Typ zálohy',
                 ],
             ],
         ],

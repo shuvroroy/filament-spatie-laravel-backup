@@ -59,6 +59,7 @@ class BackupDestinationListRecords extends Component implements HasActions, HasF
                     $plugin = FilamentSpatieLaravelBackupPlugin::get();
                     $configuredDisks = FilamentSpatieLaravelBackup::getDisks();
                     $filteredDisk = data_get($filters, 'disk.value');
+                    $filteredType = data_get($filters, 'type.value');
                     $disks = filled($filteredDisk) && in_array($filteredDisk, $configuredDisks, true)
                         ? [$filteredDisk]
                         : $configuredDisks;
@@ -75,6 +76,10 @@ class BackupDestinationListRecords extends Component implements HasActions, HasF
                     }
 
                     $data = collect($data)
+                        ->when(
+                            filled($filteredType),
+                            fn (Collection $data): Collection => $data->where('type', $filteredType),
+                        )
                         ->sortByDesc('date')
                         ->when(
                             $plugin->getBackupLimit() !== null,
@@ -134,7 +139,11 @@ class BackupDestinationListRecords extends Component implements HasActions, HasF
                 SelectFilter::make('disk')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.filters.disk'))
                     ->options(FilamentSpatieLaravelBackup::getFilterDisks()),
+                SelectFilter::make('type')
+                    ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.filters.type'))
+                    ->options(FilamentSpatieLaravelBackup::getFilterTypes()),
             ])
+            ->deferFilters(false)
             ->paginationPageOptions([10, 25, 50])
             ->recordActions([
                 Action::make('download')

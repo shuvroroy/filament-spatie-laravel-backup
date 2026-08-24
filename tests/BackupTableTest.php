@@ -59,6 +59,20 @@ it('applies the disk filter to custom backup data', function () {
         ->and(collect($records->items())->pluck('disk')->unique()->all())->toBe(['archive']);
 });
 
+it('applies the live backup type filter to custom backup data', function () {
+    Storage::disk('backups')->put('test-app/only-db-2026-08-26-00-00-00.zip', 'database');
+    Storage::disk('backups')->put('test-app/only-files-2026-08-27-00-00-00.zip', 'files');
+
+    $records = backupTableRecords(
+        FilamentSpatieLaravelBackupPlugin::make()->cacheDuration(0),
+        filters: ['type' => ['value' => 'only-db']],
+    );
+
+    expect($records->total())->toBe(1)
+        ->and($records->items()[0]['path'])->toBe('test-app/only-db-2026-08-26-00-00-00.zip')
+        ->and($records->items()[0]['type'])->toBe('only-db');
+});
+
 it('searches sorts and returns all matching custom records', function () {
     $records = backupTableRecords(
         FilamentSpatieLaravelBackupPlugin::make()->cacheDuration(0),

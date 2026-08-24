@@ -19,6 +19,7 @@ return [
 
                 'filters' => [
                     'disk' => 'Penyimpanan',
+                    'type' => 'Jenis Cadangan',
                 ],
             ],
         ],

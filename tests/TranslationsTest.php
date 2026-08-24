@@ -14,5 +14,7 @@ it('keeps every translation aligned with the English translation keys', function
 it('includes the Ukrainian translation requested in issue 67', function () {
     $translation = require __DIR__ . '/../resources/lang/uk/backup.php';
 
-    expect($translation['pages']['backups']['heading'])->toBe('Резервні копії');
+    expect($translation['pages']['backups']['heading'])->toBe('Резервні копії')
+        ->and($translation['components']['backup_destination_list']['table']['filters']['type'])
+        ->toBe('Тип резервної копії');
 });

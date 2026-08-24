@@ -261,6 +261,8 @@ Backup metadata is cached for 30 seconds by default and the table is paginated. 
 
 Backups are listed newest first. Selecting a disk filter queries and displays only that configured destination, avoiding unnecessary reads from the other backup disks.
 
+The Disk and Backup Type filters update the table immediately without an Apply button. Backup type is inferred from the filename: names containing `only-db` are shown as **Only DB**, names containing `only-files` as **Only Files**, and all other names as **DB & Files**.
+
 ```php
 FilamentSpatieLaravelBackupPlugin::make()
     ->cacheDuration(60)
