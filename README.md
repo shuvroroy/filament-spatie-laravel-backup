@@ -396,7 +396,7 @@ This package creates, lists, downloads, and deletes backups. It intentionally do
 
 ## Upgrading
 
-Please see [UPGRADE](UPGRADE.md) for details on how to upgrade 1.X to 2.0.
+Please see the [upgrade guide](UPGRADE.md) for version-specific upgrade instructions.
 
 ## Testing
 

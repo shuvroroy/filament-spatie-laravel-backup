@@ -1,8 +1,14 @@
 # Upgrade Guide
 
-## Unreleased changes after v3.4.0
+## Upgrading from v3.x to v4.0
 
-The following compatibility and behavioral changes apply when upgrading from v3.4.0 to the current development version.
+Update the package constraint and its dependencies:
+
+```sh
+composer require shuvroroy/filament-spatie-laravel-backup:^4.0 --with-all-dependencies
+```
+
+Then review the following compatibility and behavioral changes before deploying v4.0.
 
 ### Polling and backup listings
 
