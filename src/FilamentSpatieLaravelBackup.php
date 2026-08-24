@@ -401,8 +401,15 @@ class FilamentSpatieLaravelBackup
         string $path,
         ?int $lastModified,
     ): int {
+        $filename = basename($path);
+        $backupType = static::detectBackupType($filename);
+
+        if ($backupType !== BackupType::DATABASE_AND_FILES) {
+            $filename = substr($filename, strlen($backupType->value) + 1);
+        }
+
         try {
-            $date = Carbon::createFromFormat(BackupJob::FILENAME_FORMAT, basename($path));
+            $date = Carbon::createFromFormat(BackupJob::FILENAME_FORMAT, $filename);
 
             if ($date !== null) {
                 return (int) $date->timestamp;

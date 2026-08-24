@@ -66,6 +66,37 @@ it('uses directory listing metadata instead of one request per backup', function
         ->and($records[2]['size'])->toBe('300 B');
 });
 
+it('uses filename timestamps for typed backups when modification times differ', function () {
+    $driver = Mockery::mock(FilesystemOperator::class);
+    $filesystem = Mockery::mock(FilesystemAdapter::class);
+    $listing = new DirectoryListing([
+        new FileAttributes(
+            'test-app/only-db-2026-08-20-00-00-00.zip',
+            100,
+            lastModified: 2_000_000_000,
+        ),
+        new FileAttributes(
+            'test-app/only-files-2026-08-21-00-00-00.zip',
+            200,
+            lastModified: 1,
+        ),
+    ]);
+
+    Storage::shouldReceive('disk')->once()->with('remote')->andReturn($filesystem);
+    $filesystem->shouldReceive('getDriver')->once()->andReturn($driver);
+    $filesystem->shouldNotReceive('size');
+    $filesystem->shouldNotReceive('lastModified');
+    $driver->shouldReceive('listContents')->once()->with('test-app', true)->andReturn($listing);
+
+    $records = FilamentSpatieLaravelBackup::getBackupDestinationData('remote', cacheDuration: 0);
+
+    expect($records)->toHaveCount(2)
+        ->and($records[0]['path'])->toBe('test-app/only-files-2026-08-21-00-00-00.zip')
+        ->and($records[0]['date'])->toBe('2026-08-21 00:00:00')
+        ->and($records[1]['path'])->toBe('test-app/only-db-2026-08-20-00-00-00.zip')
+        ->and($records[1]['date'])->toBe('2026-08-20 00:00:00');
+});
+
 it('falls back to filesystem methods when directory metadata is unavailable', function () {
     $filesystem = Mockery::mock(Filesystem::class);
 
