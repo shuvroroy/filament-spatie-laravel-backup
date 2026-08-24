@@ -48,6 +48,7 @@ return [
 
             'messages' => [
                 'backup_success' => 'Creando un nuevo respaldo en segundo plano.',
+                'backup_delete_success' => 'La copia de seguridad se eliminó correctamente.',
             ],
 
             'modal' => [

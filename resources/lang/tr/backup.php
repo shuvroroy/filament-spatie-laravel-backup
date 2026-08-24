@@ -48,6 +48,7 @@ return [
 
             'messages' => [
                 'backup_success' => 'Arka planda yeni bir yedek oluşturuluyor.',
+                'backup_delete_success' => 'Yedek başarıyla silindi.',
             ],
 
             'modal' => [

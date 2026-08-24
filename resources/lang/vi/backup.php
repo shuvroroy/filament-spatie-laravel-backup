@@ -48,6 +48,7 @@ return [
 
             'messages' => [
                 'backup_success' => 'Đang chạy tạo bản sao lưu dưới nền.',
+                'backup_delete_success' => 'Bản sao lưu đã được xóa thành công.',
             ],
 
             'modal' => [

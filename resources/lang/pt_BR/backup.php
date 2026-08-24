@@ -48,6 +48,7 @@ return [
 
             'messages' => [
                 'backup_success' => 'Criando um novo em segundo plano.',
+                'backup_delete_success' => 'O backup foi excluído com sucesso.',
             ],
 
             'modal' => [
