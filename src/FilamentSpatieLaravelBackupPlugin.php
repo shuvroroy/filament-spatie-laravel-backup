@@ -159,6 +159,7 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
     public function cluster(?string $cluster): static
     {
         static::$clusterName = $cluster;
+
         return $this;
     }
 

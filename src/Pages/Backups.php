@@ -29,6 +29,7 @@ class Backups extends Page
         if (static::getCluster() !== null) {
             return null;
         }
+
         return FilamentSpatieLaravelBackupPlugin::get()->getNavigationGroup();
     }
 
