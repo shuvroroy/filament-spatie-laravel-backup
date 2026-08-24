@@ -4,6 +4,7 @@ use Illuminate\Support\Arr;
 
 it('keeps every translation aligned with the English translation keys', function () {
     $expectedKeys = array_keys(Arr::dot(Arr::wrap(require __DIR__ . '/../resources/lang/en/backup.php')));
+    sort($expectedKeys);
     $translationFiles = glob(__DIR__ . '/../resources/lang/*/backup.php');
 
     if ($translationFiles === false) {
@@ -11,7 +12,10 @@ it('keeps every translation aligned with the English translation keys', function
     }
 
     foreach ($translationFiles as $translationFile) {
-        expect(array_keys(Arr::dot(Arr::wrap(require $translationFile))))
+        $translationKeys = array_keys(Arr::dot(Arr::wrap(require $translationFile)));
+        sort($translationKeys);
+
+        expect($translationKeys)
             ->toBe($expectedKeys, basename(dirname($translationFile)) . ' has missing or extra translation keys');
     }
 });
