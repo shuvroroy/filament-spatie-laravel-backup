@@ -53,6 +53,17 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
+When registering several plugins at once, use `plugins([...])`:
+
+```php
+return $panel->plugins([
+    FirstPlugin::make(),
+    FilamentSpatieLaravelBackupPlugin::make(),
+]);
+```
+
+Do not pass multiple plugins as arguments to `plugin()`. That method accepts one plugin, so later arguments will not be registered.
+
 If you want to override the default `Backups` page icon, heading then you can extend the page class and override the `navigationIcon` property and `getHeading` method and so on.
 
 ```php
@@ -204,6 +215,17 @@ FilamentSpatieLaravelBackupPlugin::make()
 
 Pass `null` to `navigationGroup()` to remove the page from any navigation group.
 
+## Using the page in a cluster
+
+Pass the cluster class to the plugin. The navigation group is omitted automatically while the page is clustered:
+
+```php
+use App\Filament\Clusters\System;
+
+FilamentSpatieLaravelBackupPlugin::make()
+    ->cluster(System::class)
+```
+
 ## Customising the polling interval
 
 You can customise the polling interval for the `Backups` by following the steps below:
@@ -225,11 +247,26 @@ class AdminPanelProvider extends PanelProvider
             // ...
             ->plugin(
                 FilamentSpatieLaravelBackupPlugin::make()
-                    ->usingPolingInterval('10s') // default value is 4s
+                    ->usingPollingInterval('60s') // default value is 30s
             );
     }
 }
 ```
+
+Pass `null` to disable polling. The older `usingPolingInterval()` spelling remains available for backwards compatibility.
+
+## Large or remote backup destinations
+
+Backup metadata is cached for 30 seconds by default and the table is paginated. You can tune the cache, show only the newest backups, or hide the health summary when a remote disk is especially slow:
+
+```php
+FilamentSpatieLaravelBackupPlugin::make()
+    ->cacheDuration(60)
+    ->backupLimit(15)
+    ->statusListRecordsTable(false)
+```
+
+Set `cacheDuration(0)` to disable metadata caching, or `backupLimit(null)` to display every backup.
 
 ## Customising the queue
 
@@ -252,11 +289,14 @@ class AdminPanelProvider extends PanelProvider
             // ...
             ->plugin(
                 FilamentSpatieLaravelBackupPlugin::make()
-                    ->usingQueue('my-queue') // default value is null
+                    ->usingQueueConnection('redis')
+                    ->usingQueue('backups')
             );
     }
 }
 ```
+
+Use a non-`sync` queue connection and run a worker for production backups. A `sync` connection still performs the backup inside the web request. Failed backup commands now fail the queued job, so they appear in the configured failed-jobs store and worker logs.
 
 ## Customising the timeout
 
@@ -279,13 +319,13 @@ class AdminPanelProvider extends PanelProvider
             // ...
             ->plugin(
                 FilamentSpatieLaravelBackupPlugin::make()
-                    ->timeout(120) // default value is max_execution_time from php.ini, or 30s if it wasn't defined
+                    ->timeout(120)
             );
     }
 }
 ```
 
-For more details refer to the [set_time_limit](https://www.php.net/manual/en/function.set-time-limit.php) function.
+The value is applied to both PHP's execution time limit and Laravel's per-job queue timeout. When no value is configured, the PHP and queue-worker defaults apply. For more details refer to the [set_time_limit](https://www.php.net/manual/en/function.set-time-limit.php) function.
 
 You can also disable the timeout altogether to let the job run as long as needed:
 
@@ -311,6 +351,8 @@ class AdminPanelProvider extends PanelProvider
     }
 }
 ```
+
+Disabling the timeout does not remove the queue worker's memory limit. Size that limit separately for large backups.
 
 ## Customising who can access the page
 
@@ -339,6 +381,16 @@ class AdminPanelProvider extends PanelProvider
     }
 }
 ```
+
+## Restoring backups
+
+This package creates, lists, downloads, and deletes backups. It intentionally does not restore them: restoring an archive can overwrite live files and databases and requires application-specific validation and recovery steps. Download the archive and follow your application's tested recovery procedure instead.
+
+## Troubleshooting
+
+- **“Plugin is not registered for panel”**: ensure the backup plugin is actually registered. Use separate `plugin()` calls or one `plugins([...])` call, especially when combining it with other plugins.
+- **“Could not find driver” while an old v2 release creates `backup_destination_*` tables**: upgrade to v3. The current implementation uses Filament custom data and does not require SQLite or Sushi models.
+- **Slow S3-compatible disks**: increase `cacheDuration()`, increase or disable polling, set `backupLimit()`, or hide the status table as shown above.
 
 ## Upgrading
 

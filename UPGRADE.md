@@ -58,7 +58,7 @@ class AdminPanelProvider extends PanelProvider
                 FilamentSpatieLaravelBackupPlugin::make()
                     ->usingPage(Backups::class)
                     ->usingQueue('my-queue')
-                    ->usingPolingInterval('10s') // default value is 4s
+                    ->usingPollingInterval('10s') // default value is 30s
                     ->statusListRecordsTable(false) // default value is true
             );
     }
