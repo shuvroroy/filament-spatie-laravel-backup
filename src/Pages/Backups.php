@@ -21,7 +21,7 @@ class Backups extends Page
 
     public static function getCluster(): ?string
     {
-        return FilamentSpatieLaravelBackupPlugin::getClusterName();
+        return FilamentSpatieLaravelBackupPlugin::get()->getClusterName();
     }
 
     public static function getNavigationGroup(): string | \UnitEnum | null
@@ -55,7 +55,7 @@ class Backups extends Page
                 ->button()
                 ->label(__('filament-spatie-backup::backup.pages.backups.actions.create_backup'))
                 ->action('openOptionModal')
-                ->visible(auth()->user()->can('create-backup')),
+                ->visible(auth()->user()?->can('create-backup') ?? false),
         ];
     }
 
@@ -70,8 +70,8 @@ class Backups extends Page
         $plugin = filament()->getPlugin('filament-spatie-backup');
 
         CreateBackupJob::dispatch(Option::from($option), $plugin->getTimeout())
-            ->onQueue($plugin->getQueue())
-            ->afterResponse();
+            ->onConnection($plugin->getQueueConnection())
+            ->onQueue($plugin->getQueue());
 
         $this->dispatch('close-modal', id: 'backup-option');
 

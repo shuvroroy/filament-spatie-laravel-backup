@@ -12,19 +12,27 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 {
     use EvaluatesClosures;
 
+    protected static ?self $registeringPlugin = null;
+
     protected bool | Closure $authorizeUsing = true;
 
     protected string $page = Backups::class;
 
     protected ?string $queue = null;
 
-    protected string $interval = '4s';
+    protected ?string $queueConnection = null;
+
+    protected ?string $pollingInterval = '30s';
+
+    protected int $cacheDuration = 30;
+
+    protected ?int $backupLimit = null;
 
     protected bool $hasStatusListRecordsTable = true;
 
     protected ?int $timeout = null;
 
-    protected static ?string $clusterName = null;
+    protected ?string $clusterName = null;
 
     protected Closure | string | \BackedEnum $navigationIcon = 'heroicon-o-cog';
 
@@ -38,7 +46,13 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 
     public function register(Panel $panel): void
     {
-        $panel->pages([$this->getPage()]);
+        static::$registeringPlugin = $this;
+
+        try {
+            $panel->pages([$this->getPage()]);
+        } finally {
+            static::$registeringPlugin = null;
+        }
     }
 
     public function boot(Panel $panel): void
@@ -60,6 +74,10 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 
     public static function get(): static
     {
+        if (static::$registeringPlugin instanceof static) {
+            return static::$registeringPlugin;
+        }
+
         /** @var static $instance */
         $instance = filament(app(static::class)->getId());
 
@@ -100,16 +118,76 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
         return $this->queue;
     }
 
-    public function usingPolingInterval(string $interval): static
+    public function usingQueueConnection(string $connection): static
     {
-        $this->interval = $interval;
+        $this->queueConnection = $connection;
 
         return $this;
     }
 
-    public function getPolingInterval(): string
+    public function getQueueConnection(): ?string
     {
-        return $this->interval;
+        return $this->queueConnection;
+    }
+
+    public function usingPollingInterval(?string $interval): static
+    {
+        $this->pollingInterval = $interval;
+
+        return $this;
+    }
+
+    /**
+     * @deprecated Use usingPollingInterval() instead.
+     */
+    public function usingPolingInterval(?string $interval): static
+    {
+        return $this->usingPollingInterval($interval);
+    }
+
+    public function getPollingInterval(): ?string
+    {
+        return $this->pollingInterval;
+    }
+
+    /**
+     * @deprecated Use getPollingInterval() instead.
+     */
+    public function getPolingInterval(): ?string
+    {
+        return $this->getPollingInterval();
+    }
+
+    public function cacheDuration(int $seconds): static
+    {
+        if ($seconds < 0) {
+            throw new \InvalidArgumentException('The cache duration must be zero or greater.');
+        }
+
+        $this->cacheDuration = $seconds;
+
+        return $this;
+    }
+
+    public function getCacheDuration(): int
+    {
+        return $this->cacheDuration;
+    }
+
+    public function backupLimit(?int $limit): static
+    {
+        if ($limit !== null && $limit < 1) {
+            throw new \InvalidArgumentException('The backup limit must be at least one.');
+        }
+
+        $this->backupLimit = $limit;
+
+        return $this;
+    }
+
+    public function getBackupLimit(): ?int
+    {
+        return $this->backupLimit;
     }
 
     /**
@@ -119,6 +197,10 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
      */
     public function timeout(int $seconds): static
     {
+        if ($seconds < 0) {
+            throw new \InvalidArgumentException('The timeout must be zero or greater.');
+        }
+
         $this->timeout = $seconds;
 
         return $this;
@@ -158,14 +240,14 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
 
     public function cluster(?string $cluster): static
     {
-        static::$clusterName = $cluster;
+        $this->clusterName = $cluster;
 
         return $this;
     }
 
-    public static function getClusterName(): ?string
+    public function getClusterName(): ?string
     {
-        return static::$clusterName;
+        return $this->clusterName;
     }
 
     public function navigationGroup(string | Closure | null $navigationGroup): static
