@@ -286,7 +286,8 @@ FilamentSpatieLaravelBackupPlugin::make()
     ->navigationGroup(fn (): ?string => auth()->user()?->isAdmin() === true ? 'Admin' : 'Tools')
 ```
 
-Pass `null` to `navigationGroup()` to remove the page from any navigation group.
+> [!NOTE]
+> Pass `null` to `navigationGroup()` to remove the page from any navigation group.
 
 ### Using the page in a cluster
 
@@ -326,7 +327,8 @@ class AdminPanelProvider extends PanelProvider
 }
 ```
 
-Pass `null` to disable polling.
+> [!NOTE]
+> Pass `null` to disable polling.
 
 ### Large or remote backup destinations
 
@@ -509,16 +511,16 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 
 ## Contributing
 
-Please see [CONTRIBUTING](https://github.com/shuvroroy/filament-spatie-laravel-backup/blob/main/.github/CONTRIBUTING.md) for details.
+Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
 
 ## Security Vulnerabilities
 
-Please review [our security policy](https://github.com/shuvroroy/filament-spatie-laravel-backup/security/policy) on how to report security vulnerabilities.
+Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
 
 ## Credits
 
 - [Shuvro Roy](https://github.com/shuvroroy)
-- [All Contributors](https://github.com/shuvroroy/filament-spatie-laravel-backup/graphs/contributors)
+- [All Contributors](../../contributors)
 
 ## License
 
