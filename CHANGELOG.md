@@ -2,6 +2,16 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v4.0.2 - 2026-08-27
+
+### What's Changed
+
+* chore(deps-dev): bump cssnano from 6.1.2 to 8.0.7 by @dependabot[bot] in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/129
+* chore(deps-dev): bump postcss-nesting from 12.1.5 to 14.0.1 by @dependabot[bot] in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/130
+* chore(deps-dev): bump postcss-cli from 10.1.0 to 11.0.1 by @dependabot[bot] in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/131
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v4.0.1...v4.0.2
+
 ## v4.0.1 - 2026-08-27
 
 ### What's Changed
