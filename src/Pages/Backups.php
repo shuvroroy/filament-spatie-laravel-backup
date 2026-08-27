@@ -4,8 +4,11 @@ namespace ShuvroRoy\FilamentSpatieLaravelBackup\Pages;
 
 use Filament\Actions\Action;
 use Filament\Clusters\Cluster;
+use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Pages\PageConfiguration;
+use Filament\Panel;
 use Illuminate\Contracts\Support\Htmlable;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Enums\BackupType;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
@@ -18,6 +21,19 @@ class Backups extends Page
     public function getHeading(): string | Htmlable
     {
         return FilamentSpatieLaravelBackupPlugin::get()->getHeading();
+    }
+
+    public static function registerRoutes(Panel $panel, ?PageConfiguration $configuration = null): void
+    {
+        $currentPanel = Filament::getCurrentPanel();
+
+        Filament::setCurrentPanel($panel);
+
+        try {
+            parent::registerRoutes($panel, $configuration);
+        } finally {
+            Filament::setCurrentPanel($currentPanel);
+        }
     }
 
     /** @return class-string<Cluster>|null */
