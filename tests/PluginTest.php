@@ -4,6 +4,8 @@ use Filament\Clusters\Cluster;
 use Filament\Contracts\Plugin as FilamentPlugin;
 use Filament\Facades\Filament;
 use Filament\Panel;
+use Filament\PanelRegistry;
+use Illuminate\Support\Facades\Route;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups;
 
@@ -84,6 +86,26 @@ it('resolves cluster configuration from the current panel', function () {
 
     Filament::setCurrentPanel($plainPanel);
     expect(Backups::getCluster())->toBeNull();
+});
+
+it('registers routes when the plugin is not on the default panel', function () {
+    $defaultPanel = Panel::make()
+        ->default()
+        ->id('student');
+    $backupPanel = Panel::make()
+        ->id('admin')
+        ->plugin(FilamentSpatieLaravelBackupPlugin::make()->cluster(PluginTestCluster::class));
+
+    app(PanelRegistry::class)->register($defaultPanel);
+    app(PanelRegistry::class)->register($backupPanel);
+    Filament::setCurrentPanel(null);
+
+    Backups::registerRoutes($backupPanel);
+
+    expect(Filament::getCurrentPanel())->toBeNull()
+        ->and(collect(Route::getRoutes()->getRoutesByName())->keys()->contains(
+            fn (string $name): bool => str_starts_with($name, 'plugin-test.pages.'),
+        ))->toBeTrue();
 });
 
 it('makes no timeout visible to the queue worker', function () {
