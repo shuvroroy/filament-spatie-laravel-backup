@@ -2,6 +2,15 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v4.0.1 - 2026-08-27
+
+### What's Changed
+
+* Fix route registration in multi-panel apps by @shuvroroy in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/127
+* Harden dependency update workflows by @shuvroroy in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/128
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v4.0.0...v4.0.1
+
 ## v4.0.0 - Unreleased
 
 ### Added
