@@ -13,6 +13,7 @@ This package adds a Filament page for creating, monitoring, downloading, and del
 - [Installation](#installation)
 - [Quick start](#quick-start)
 - [Permissions](#permissions)
+- [Filament Shield integration](#filament-shield-integration)
 - [Configuration](#configuration)
 - [Restoring backups](#restoring-backups)
 - [Troubleshooting](#troubleshooting)
@@ -153,7 +154,87 @@ FilamentSpatieLaravelBackupPlugin::make()
     ->authorize(fn (): bool => auth()->user()?->can('view-backups') ?? false)
 ```
 
-If you use [Spatie Laravel Permission](https://spatie.be/docs/laravel-permission) or [Filament Shield](https://github.com/bezhansalleh/filament-shield), register the same three action permissions with that package.
+If you use [Spatie Laravel Permission](https://spatie.be/docs/laravel-permission), register the same three action permissions with that package. For [Filament Shield](https://github.com/bezhansalleh/filament-shield), follow the [integration guide below](#filament-shield-integration) to make them available in the role editor.
+
+### Filament Shield integration
+
+The following example uses Shield 4.3.1 or later with Filament 4 or 5. Complete [Shield's installation](https://github.com/bezhansalleh/filament-shield#installation) first, including adding Spatie's `HasRoles` trait to your user model and registering `FilamentShieldPlugin` in the same panel as the backup plugin.
+
+The backup actions use custom permissions. Seeding permission records alone does not add them to Shield's role editor: you must also declare them in Shield's configuration and enable its **Custom Permissions** tab.
+
+Publish Shield's configuration if you have not already done so:
+
+```bash
+php artisan vendor:publish --tag="filament-shield-config"
+```
+
+Merge these entries into the existing arrays in `config/filament-shield.php`, keeping your other settings, custom permissions, and excluded pages:
+
+```php
+use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups;
+
+return [
+    // ...
+    'shield_resource' => [
+        // ...
+        'tabs' => [
+            // ...
+            'custom_permissions' => true,
+        ],
+    ],
+
+    'permissions' => [
+        // ...
+        'format_custom_permission_keys' => false,
+    ],
+
+    'custom_permissions' => [
+        // ...
+        'view-backups' => 'View backups',
+        'create-backup' => 'Create backup',
+        'download-backup' => 'Download backup',
+        'delete-backup' => 'Delete backup',
+    ],
+
+    'pages' => [
+        // ...
+        'exclude' => [
+            // ...
+            Backups::class,
+        ],
+    ],
+    // ...
+];
+```
+
+Keep these permission keys exactly as shown. Shield normally formats custom keys using its configured case; for example, `create-backup` becomes `CreateBackup` with the default PascalCase setting, which does not match this plugin's check. Setting `permissions.format_custom_permission_keys` to `false` preserves all custom keys, so keep any other custom keys consistent with their existing database names. If you use Shield's `buildPermissionKeyUsing()` callback, it must also preserve these backup keys. See [Shield's custom permission documentation](https://github.com/bezhansalleh/filament-shield#custom-permissions).
+
+In this example, `view-backups` controls access to the entire page. Wire it to the backup plugin in your panel provider:
+
+```php
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+
+return $panel->plugins([
+    FilamentShieldPlugin::make(),
+    FilamentSpatieLaravelBackupPlugin::make()
+        ->authorize(fn (): bool => auth()->user()?->can('view-backups') ?? false),
+]);
+```
+
+The `pages.exclude` entry prevents Shield from also generating a separate page permission such as `View:Backups`. The package page uses the plugin's `authorize()` callback, so assigning a generated page permission alone does not restrict page access. If you registered a [custom page](#custom-page) with `usingPage()`, exclude that class instead.
+
+Clear cached configuration, generate permissions for your panel, and reset the permission cache:
+
+```bash
+php artisan config:clear
+php artisan shield:generate --all --option=permissions --panel=admin
+php artisan permission:cache-reset
+```
+
+Replace `admin` with your panel ID. The `--all` flag includes custom permissions, and `--option=permissions` generates permission records without generating policies. Shield uses the selected panel's authentication guard; the role and user must use the same guard.
+
+Open **Roles**, edit the intended role, and select **View backups** and the desired backup actions under **Custom Permissions**. Save the role and assign it to the user. Page access and action permissions are separate: `view-backups` allows the page to open, while the other three permissions control which backup actions are shown. You do not need to run the seeder below when using this Shield workflow.
 
 ### Seeder Example
 
@@ -486,6 +567,7 @@ This package creates, lists, downloads, and deletes backups. It intentionally do
 
 ## Troubleshooting
 
+- **Backup permissions are missing from Shield's role editor**: follow the [Filament Shield integration](#filament-shield-integration) guide. Declare the exact permission keys in `custom_permissions`, enable `shield_resource.tabs.custom_permissions`, preserve custom key formatting, and regenerate permissions for the correct panel. If the tab is visible but actions are missing, check the role assignments and authentication guard, then reset the permission cache.
 - **“Plugin is not registered for panel”**: ensure the backup plugin is actually registered. Use separate `plugin()` calls or one `plugins([...])` call, especially when combining it with other plugins.
 - **A backup remains pending**: make sure a worker is listening on the connection and queue configured with `usingQueueConnection()` and `usingQueue()`. Check the application log and failed-jobs store for the underlying command error.
 - **A manual backup times out in the browser**: the application is probably using the `sync` queue. Select an asynchronous connection and keep its worker running; increasing `timeout()` alone does not move the work outside the Livewire request.
