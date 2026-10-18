@@ -97,15 +97,14 @@ final class DownloadBackupController
     private function prepareOutputBuffers(): bool
     {
         // Discard ordinary buffers, but preserve handlers used by HTTP transports.
-        $removableFlags = PHP_OUTPUT_HANDLER_REMOVABLE | PHP_OUTPUT_HANDLER_CLEANABLE;
-        /** @var list<array{name: string, flags: int, chunk_size: int}> $buffers */
+        /** @var list<array{name: string, flags: int, chunk_size: int, buffer_used: int}> $buffers */
         $buffers = ob_get_status(true);
 
         while ($buffers !== []) {
             $buffer = $buffers[array_key_last($buffers)];
 
             if ($buffer['name'] !== 'default output handler'
-                || ($buffer['flags'] & $removableFlags) !== $removableFlags) {
+                || ($buffer['flags'] & PHP_OUTPUT_HANDLER_REMOVABLE) === 0) {
                 break;
             }
 
@@ -118,9 +117,21 @@ final class DownloadBackupController
         // Only the top buffer can be flushed explicitly. Lower buffers must
         // drain automatically, or they could accumulate the whole archive.
         foreach ($buffers as $level => $buffer) {
-            if ($buffer['chunk_size'] === 0
-                && ($level !== $topLevel || ($buffer['flags'] & PHP_OUTPUT_HANDLER_FLUSHABLE) === 0)) {
+            $hasPendingOutput = $buffer['buffer_used'] > 0;
+            $canClean = $level === $topLevel
+                && $buffer['name'] === 'default output handler'
+                && ($buffer['flags'] & PHP_OUTPUT_HANDLER_CLEANABLE) !== 0;
+
+            if (($hasPendingOutput && ! $canClean)
+                || ($buffer['chunk_size'] === 0
+                    && ($level !== $topLevel || ($buffer['flags'] & PHP_OUTPUT_HANDLER_FLUSHABLE) === 0))) {
                 throw new RuntimeException('The backup cannot be streamed while a protected output buffer is active.');
+            }
+
+            // Cleaning a custom handler can itself emit output. Only discard
+            // pending bytes from an accessible ordinary buffer.
+            if ($hasPendingOutput) {
+                ob_clean();
             }
         }
 

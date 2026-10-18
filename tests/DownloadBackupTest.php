@@ -136,7 +136,15 @@ it('streams a backup larger than the PHP memory limit through output buffers', f
     expect($result['bytes'])->toBe($size)
         ->and($result['sha256'])->toBe(hash_file('sha256', Storage::disk('backups')->path($path)))
         ->and($result['stderr'])->toBe('');
-})->with(['plain', 'buffered', 'nested', 'bounded', 'nonflushable']);
+})->with(['plain', 'buffered', 'nested', 'bounded', 'nonflushable', 'ordinary-cleanable', 'ordinary-removable']);
+
+it('cleans pending ordinary output before streaming the backup', function (string $mode) {
+    $result = streamBackupDownloadInSubprocess($mode);
+
+    expect($result['bytes'])->toBe(15)
+        ->and($result['sha256'])->toBe(hash('sha256', 'backup contents'))
+        ->and($result['stderr'])->toBe('');
+})->with(['ordinary-cleanable', 'ordinary-removable']);
 
 it('preserves output handlers that provide the response transport', function (string $mode) {
     $result = streamBackupDownloadInSubprocess($mode);
@@ -183,6 +191,17 @@ it('rejects protected output buffers without leaking backup bytes or leaving str
     expect($result['bytes'])->toBe(0)
         ->and($result['stderr'])->toBe("The backup cannot be streamed while a protected output buffer is active.\nstream closed\n");
 })->with(['protected', 'protected-nested', 'protected-hidden']);
+
+it('rejects dirty output buffers that cannot be cleaned before streaming', function (string $mode) {
+    $result = streamBackupDownloadInSubprocess($mode);
+    $pendingOutput = 'accidental output before the backup';
+
+    // PHP still flushes the pre-existing output during shutdown. The archive
+    // must never be appended to a buffer that the response cannot clean.
+    expect($result['bytes'])->toBe(strlen($pendingOutput))
+        ->and($result['sha256'])->toBe(hash('sha256', $pendingOutput))
+        ->and($result['stderr'])->toBe("The backup cannot be streamed while a protected output buffer is active.\nstream closed\n");
+})->with(['ordinary-dirty-protected', 'ordinary-dirty-hidden', 'transport-dirty']);
 
 it('requires download permission when requesting the file directly', function () {
     registerBackupDownloadPanel();

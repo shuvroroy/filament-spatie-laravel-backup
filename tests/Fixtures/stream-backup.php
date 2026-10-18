@@ -97,7 +97,7 @@ Route::getRoutes()->refreshNameLookups();
 Filament::auth()->setUser(new DownloadProcessUser);
 $stream = null;
 
-if (in_array($mode, ['failed-read', 'stalled-read', 'protected', 'protected-nested', 'protected-hidden'], true)) {
+if (in_array($mode, ['failed-read', 'stalled-read', 'protected', 'protected-nested', 'protected-hidden', 'ordinary-dirty-protected', 'ordinary-dirty-hidden', 'transport-dirty'], true)) {
     if (in_array($mode, ['failed-read', 'stalled-read'], true)) {
         UnreadableBackupStream::$emptyRead = $mode === 'stalled-read';
         stream_wrapper_register('unreadable-backup', UnreadableBackupStream::class);
@@ -146,6 +146,35 @@ if ($mode === 'bounded') {
 
 if ($mode === 'nonflushable') {
     ob_start(null, 0, PHP_OUTPUT_HANDLER_CLEANABLE | PHP_OUTPUT_HANDLER_REMOVABLE);
+}
+
+if (in_array($mode, ['ordinary-cleanable', 'ordinary-removable', 'ordinary-dirty-protected'], true)) {
+    $flags = match ($mode) {
+        'ordinary-cleanable' => PHP_OUTPUT_HANDLER_CLEANABLE | PHP_OUTPUT_HANDLER_FLUSHABLE,
+        'ordinary-removable' => PHP_OUTPUT_HANDLER_REMOVABLE,
+        default => PHP_OUTPUT_HANDLER_FLUSHABLE,
+    };
+    ob_start(null, 0, $flags);
+    echo 'accidental output before the backup';
+}
+
+if ($mode === 'ordinary-dirty-hidden') {
+    ob_start(null, 8192);
+    echo 'accidental output before the backup';
+    ob_start(fn (string $chunk): string => $chunk, 1);
+}
+
+if ($mode === 'transport-dirty') {
+    ob_start(function (string $chunk, int $phase): string {
+        if (($phase & PHP_OUTPUT_HANDLER_CLEAN) !== 0) {
+            fwrite(STDERR, "transport handler must not be cleaned\n");
+        }
+
+        fwrite(STDOUT, $chunk);
+
+        return '';
+    }, 8192);
+    echo 'accidental output before the backup';
 }
 
 $transportBytes = 0;
