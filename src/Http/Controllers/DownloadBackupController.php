@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\WhitespacePathNormalizer;
-use RuntimeException;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackup;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+use ShuvroRoy\FilamentSpatieLaravelBackup\Support\BackupDownloadStream;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class DownloadBackupController
@@ -60,82 +60,9 @@ final class DownloadBackupController
 
         abort_unless($filesystem->exists($path), 404);
 
-        return response()->streamDownload(function () use ($filesystem, $path): void {
-            $stream = $filesystem->readStream($path);
-
-            if (! is_resource($stream)) {
-                throw new RuntimeException('The backup could not be opened for download.');
-            }
-
-            try {
-                $flushOutputBuffer = $this->prepareOutputBuffers();
-
-                while (! feof($stream)) {
-                    $chunk = fread($stream, 1024 * 1024);
-
-                    if ($chunk === false || ($chunk === '' && ! feof($stream))) {
-                        throw new RuntimeException('The backup could not be read for download.');
-                    }
-
-                    echo $chunk;
-
-                    if ($flushOutputBuffer) {
-                        ob_flush();
-                    }
-
-                    flush();
-                }
-            } finally {
-                fclose($stream);
-            }
-        }, basename($path), [
+        return response()->streamDownload(new BackupDownloadStream($filesystem, $path), basename($path), [
             'Content-Type' => $filesystem->mimeType($path) ?: 'application/octet-stream',
             'Content-Length' => (string) $filesystem->size($path),
         ]);
-    }
-
-    private function prepareOutputBuffers(): bool
-    {
-        // Discard ordinary buffers, but preserve handlers used by HTTP transports.
-        /** @var list<array{name: string, flags: int, chunk_size: int, buffer_used: int}> $buffers */
-        $buffers = ob_get_status(true);
-
-        while ($buffers !== []) {
-            $buffer = $buffers[array_key_last($buffers)];
-
-            if ($buffer['name'] !== 'default output handler'
-                || ($buffer['flags'] & PHP_OUTPUT_HANDLER_REMOVABLE) === 0) {
-                break;
-            }
-
-            ob_end_clean();
-            array_pop($buffers);
-        }
-
-        $topLevel = array_key_last($buffers);
-
-        // Only the top buffer can be flushed explicitly. Lower buffers must
-        // drain automatically, or they could accumulate the whole archive.
-        foreach ($buffers as $level => $buffer) {
-            $hasPendingOutput = $buffer['buffer_used'] > 0;
-            $canClean = $level === $topLevel
-                && $buffer['name'] === 'default output handler'
-                && ($buffer['flags'] & PHP_OUTPUT_HANDLER_CLEANABLE) !== 0;
-
-            if (($hasPendingOutput && ! $canClean)
-                || ($buffer['chunk_size'] === 0
-                    && ($level !== $topLevel || ($buffer['flags'] & PHP_OUTPUT_HANDLER_FLUSHABLE) === 0))) {
-                throw new RuntimeException('The backup cannot be streamed while a protected output buffer is active.');
-            }
-
-            // Cleaning a custom handler can itself emit output. Only discard
-            // pending bytes from an accessible ordinary buffer.
-            if ($hasPendingOutput) {
-                ob_clean();
-            }
-        }
-
-        return $topLevel !== null
-            && ($buffers[$topLevel]['flags'] & PHP_OUTPUT_HANDLER_FLUSHABLE) !== 0;
     }
 }

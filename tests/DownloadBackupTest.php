@@ -147,12 +147,50 @@ it('cleans pending ordinary output before streaming the backup', function (strin
 })->with(['ordinary-cleanable', 'ordinary-removable']);
 
 it('preserves output handlers that provide the response transport', function (string $mode) {
-    $result = streamBackupDownloadInSubprocess($mode);
+    $result = streamBackupDownloadInSubprocess($mode, observe: true);
 
-    expect($result['bytes'])->toBe(15)
-        ->and($result['sha256'])->toBe(hash('sha256', 'backup contents'))
-        ->and($result['stderr'])->toBe("transport bytes: 15\n");
+    assertBackupDeliveredBeforeReturn($result, 15, hash('sha256', 'backup contents'));
+
+    expect($result['stderr'])->toBe("transport bytes: 15\n");
 })->with(['transport', 'transport-nested', 'transport-unbounded', 'transport-protected-flushable', 'transport-protected-bounded']);
+
+it('completes or rejects an output buffer stack before returning', function (string $scenario, int $size) {
+    $contract = backupOutputBufferContracts()[$scenario];
+    $backup = writeOutputContractBackup($size);
+    $result = streamBackupDownloadInSubprocess('contract', $backup['path'], $contract['buffers'], observe: true);
+
+    if ($contract['allowed']) {
+        assertBackupDeliveredBeforeReturn($result, $size, $backup['sha256']);
+
+        expect($result['stderr'])->toBe('');
+
+        return;
+    }
+
+    $error = 'The backup cannot be streamed while a protected output buffer is active.';
+
+    expect($result['report'])->toMatchArray([
+        'bytes' => 0,
+        'sha256' => hash('sha256', ''),
+        'pending' => 0,
+        'observer_present' => true,
+        'stream_closed' => true,
+        'error' => $error,
+    ])->and($result['bytes'])->toBe(0)
+        ->and($result['stderr'])->toBe($error . "\nstream closed\n");
+})->with(array_keys(backupOutputBufferContracts()))->with([15, 1024 * 1024 + 17]);
+
+it('delivers every byte at buffer and read boundaries before returning', function (int $size) {
+    $backup = writeOutputContractBackup($size);
+    $result = streamBackupDownloadInSubprocess('contract', $backup['path'], [
+        backupOutputBuffer('passthrough', 1, 0),
+        backupOutputBuffer('passthrough', 8192),
+    ], observe: true);
+
+    assertBackupDeliveredBeforeReturn($result, $size, $backup['sha256']);
+
+    expect($result['stderr'])->toBe('');
+})->with([0, 1, 8191, 8192, 8193, 1048575, 1048576, 1048577]);
 
 it('requires a logged in panel user', function () {
     registerBackupDownloadPanel();
@@ -403,8 +441,11 @@ function backupDownloadUrl(array $parameters = []): string
     ]);
 }
 
-/** @return array{bytes: int, sha256: string, stderr: string} */
-function streamBackupDownloadInSubprocess(string $mode = 'plain', string $path = 'test-app/backup.zip'): array
+/**
+ * @param  list<array{handler: 'ordinary'|'passthrough'|'transport', chunk_size: int, flags: int, pending: string}>|null  $buffers
+ * @return array{bytes: int, sha256: string, stderr: string, report: array<mixed>|null}
+ */
+function streamBackupDownloadInSubprocess(string $mode = 'plain', string $path = 'test-app/backup.zip', ?array $buffers = null, bool $observe = false): array
 {
     // A real streaming response closes output buffers, including PHPUnit's
     // capture. Execute it separately and drain stdout without retaining it.
@@ -423,7 +464,14 @@ function streamBackupDownloadInSubprocess(string $mode = 'plain', string $path =
     $bytes = 0;
     $hash = hash_init('sha256');
     $coverageFile = CodeCoverage::instance()->isActive() ? tempnam(sys_get_temp_dir(), 'backup-coverage-') : false;
-    $process->setEnv(['BACKUP_DOWNLOAD_COVERAGE' => $coverageFile, 'XDEBUG_MODE' => 'coverage']);
+    $reportFile = $observe ? tempnam(sys_get_temp_dir(), 'backup-report-') : false;
+    $report = null;
+    $process->setEnv([
+        'BACKUP_DOWNLOAD_COVERAGE' => $coverageFile,
+        'BACKUP_DOWNLOAD_REPORT' => $reportFile,
+        'BACKUP_DOWNLOAD_BUFFERS' => json_encode($buffers ?? backupOutputBufferScenario($mode), JSON_THROW_ON_ERROR),
+        'XDEBUG_MODE' => 'coverage',
+    ]);
 
     try {
         $process->run(function (string $type, string $chunk) use ($process, &$bytes, $hash): void {
@@ -435,6 +483,15 @@ function streamBackupDownloadInSubprocess(string $mode = 'plain', string $path =
         });
 
         expect($process->getExitCode())->toBe(0, $process->getErrorOutput());
+
+        if ($reportFile !== false) {
+            $data = file_get_contents($reportFile);
+            $report = $data !== false ? json_decode($data, true, 512, JSON_THROW_ON_ERROR) : null;
+
+            if (! is_array($report)) {
+                throw new RuntimeException('The download subprocess did not return its delivery report.');
+            }
+        }
 
         if ($coverageFile !== false) {
             $data = file_get_contents($coverageFile);
@@ -450,7 +507,107 @@ function streamBackupDownloadInSubprocess(string $mode = 'plain', string $path =
         if ($coverageFile !== false) {
             unlink($coverageFile);
         }
+
+        if ($reportFile !== false) {
+            unlink($reportFile);
+        }
     }
 
-    return ['bytes' => $bytes, 'sha256' => hash_final($hash), 'stderr' => $process->getErrorOutput()];
+    return ['bytes' => $bytes, 'sha256' => hash_final($hash), 'stderr' => $process->getErrorOutput(), 'report' => $report];
+}
+
+/**
+ * @param  'ordinary'|'passthrough'|'transport'  $handler
+ * @return array{handler: 'ordinary'|'passthrough'|'transport', chunk_size: int, flags: int, pending: string}
+ */
+function backupOutputBuffer(string $handler = 'ordinary', int $chunkSize = 0, int $flags = PHP_OUTPUT_HANDLER_STDFLAGS, string $pending = ''): array
+{
+    return ['handler' => $handler, 'chunk_size' => $chunkSize, 'flags' => $flags, 'pending' => $pending];
+}
+
+/** @return array<string, array{buffers: list<array{handler: 'ordinary'|'passthrough'|'transport', chunk_size: int, flags: int, pending: string}>, allowed: bool}> */
+function backupOutputBufferContracts(): array
+{
+    return [
+        'flushable top with a larger threshold' => [
+            'buffers' => [backupOutputBuffer('passthrough', 8192)],
+            'allowed' => true,
+        ],
+        'nonflushable top with a larger threshold' => [
+            'buffers' => [backupOutputBuffer('passthrough', 8192, PHP_OUTPUT_HANDLER_REMOVABLE)],
+            'allowed' => false,
+        ],
+        'immediate nonflushable top' => [
+            'buffers' => [backupOutputBuffer('passthrough', 1, 0)],
+            'allowed' => true,
+        ],
+        'inaccessible lower buffer with a larger threshold' => [
+            'buffers' => [backupOutputBuffer('passthrough', 8192), backupOutputBuffer('passthrough', 8192)],
+            'allowed' => false,
+        ],
+        'immediate lower buffer beneath a flushable top' => [
+            'buffers' => [backupOutputBuffer('passthrough', 1, 0), backupOutputBuffer('passthrough', 8192)],
+            'allowed' => true,
+        ],
+        'unbounded flushable top' => [
+            'buffers' => [backupOutputBuffer('passthrough')],
+            'allowed' => true,
+        ],
+    ];
+}
+
+/** @return list<array{handler: 'ordinary'|'passthrough'|'transport', chunk_size: int, flags: int, pending: string}> */
+function backupOutputBufferScenario(string $mode): array
+{
+    $pending = 'accidental output before the backup';
+
+    return match ($mode) {
+        'plain', 'failed-read', 'stalled-read' => [],
+        'buffered' => [backupOutputBuffer(pending: $pending)],
+        'nested' => [backupOutputBuffer(pending: $pending), backupOutputBuffer(pending: 'more accidental output')],
+        'bounded' => [backupOutputBuffer(chunkSize: 8192)],
+        'nonflushable' => [backupOutputBuffer(flags: PHP_OUTPUT_HANDLER_CLEANABLE | PHP_OUTPUT_HANDLER_REMOVABLE)],
+        'ordinary-cleanable' => [backupOutputBuffer(flags: PHP_OUTPUT_HANDLER_CLEANABLE | PHP_OUTPUT_HANDLER_FLUSHABLE, pending: $pending)],
+        'ordinary-removable' => [backupOutputBuffer(flags: PHP_OUTPUT_HANDLER_REMOVABLE, pending: $pending)],
+        'ordinary-dirty-protected' => [backupOutputBuffer(flags: PHP_OUTPUT_HANDLER_FLUSHABLE, pending: $pending)],
+        'ordinary-dirty-hidden' => [backupOutputBuffer(chunkSize: 8192, pending: $pending), backupOutputBuffer('passthrough', 1)],
+        'transport-dirty' => [backupOutputBuffer('transport', 8192, pending: $pending)],
+        'transport' => [backupOutputBuffer('transport', 1)],
+        'transport-nested' => [backupOutputBuffer('transport', 1), backupOutputBuffer(pending: 'accidental output above the transport')],
+        'transport-unbounded' => [backupOutputBuffer('transport')],
+        'transport-protected-flushable' => [backupOutputBuffer('transport', flags: PHP_OUTPUT_HANDLER_CLEANABLE | PHP_OUTPUT_HANDLER_FLUSHABLE)],
+        'transport-protected-bounded' => [backupOutputBuffer('transport', 1, 0)],
+        'protected' => [backupOutputBuffer(flags: 0)],
+        'protected-nested' => [backupOutputBuffer(flags: 0), backupOutputBuffer()],
+        'protected-hidden' => [backupOutputBuffer(), backupOutputBuffer('passthrough', 1)],
+        default => throw new LogicException('Unknown output buffer scenario.'),
+    };
+}
+
+/** @return array{path: string, sha256: string} */
+function writeOutputContractBackup(int $size): array
+{
+    $tail = substr("distinct-tail-\0\xffXY", 0, min($size, 17));
+    $prefixLength = $size - strlen($tail);
+    $contents = substr(str_repeat('0123456789abcdef', intdiv($prefixLength + 15, 16)), 0, $prefixLength) . $tail;
+    $path = 'test-app/contract.zip';
+    Storage::disk('backups')->put($path, $contents);
+
+    return ['path' => $path, 'sha256' => hash('sha256', $contents)];
+}
+
+/** @param array{bytes: int, sha256: string, report: array<mixed>|null} $result */
+function assertBackupDeliveredBeforeReturn(array $result, int $size, string $sha256): void
+{
+    // Compare the transport snapshot taken when sendContent returns with the
+    // complete process output, so shutdown cannot rescue a truncated response.
+    expect($result['report'])->toMatchArray([
+        'bytes' => $size,
+        'sha256' => $sha256,
+        'pending' => 0,
+        'observer_present' => true,
+        'stream_closed' => true,
+        'error' => null,
+    ])->and($result['bytes'])->toBe($size)
+        ->and($result['sha256'])->toBe($sha256);
 }

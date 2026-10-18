@@ -29,6 +29,7 @@ $coverage = null;
 if ($coverageFile !== false) {
     $filter = new Filter;
     $filter->includeFile(__DIR__ . '/../../src/Http/Controllers/DownloadBackupController.php');
+    $filter->includeFile(__DIR__ . '/../../src/Support/BackupDownloadStream.php');
     $coverage = new CodeCoverage((new Selector)->forLineCoverage($filter), $filter);
     $coverage->start('stream-backup');
 }
@@ -72,6 +73,7 @@ $mode = $argv[1];
 $root = $argv[2];
 $path = $argv[3];
 $directory = $argv[4];
+$reportFile = getenv('BACKUP_DOWNLOAD_REPORT');
 $app = (new TestCase('streamBackup'))->createApplication();
 
 config()->set('app.key', 'base64:' . base64_encode(str_repeat('a', 32)));
@@ -97,7 +99,8 @@ Route::getRoutes()->refreshNameLookups();
 Filament::auth()->setUser(new DownloadProcessUser);
 $stream = null;
 
-if (in_array($mode, ['failed-read', 'stalled-read', 'protected', 'protected-nested', 'protected-hidden', 'ordinary-dirty-protected', 'ordinary-dirty-hidden', 'transport-dirty'], true)) {
+if ($reportFile !== false || in_array($mode, ['failed-read', 'stalled-read', 'protected', 'protected-nested', 'protected-hidden', 'ordinary-dirty-protected', 'ordinary-dirty-hidden', 'transport-dirty'], true)) {
+    $size = Storage::disk('backups')->size($path);
     if (in_array($mode, ['failed-read', 'stalled-read'], true)) {
         UnreadableBackupStream::$emptyRead = $mode === 'stalled-read';
         stream_wrapper_register('unreadable-backup', UnreadableBackupStream::class);
@@ -113,7 +116,7 @@ if (in_array($mode, ['failed-read', 'stalled-read', 'protected', 'protected-nest
     $filesystem = Mockery::mock(FilesystemAdapter::class);
     $filesystem->shouldReceive('exists')->once()->with($path)->andReturnTrue();
     $filesystem->shouldReceive('mimeType')->once()->with($path)->andReturn('application/zip');
-    $filesystem->shouldReceive('size')->once()->with($path)->andReturn(15);
+    $filesystem->shouldReceive('size')->once()->with($path)->andReturn($size);
     $filesystem->shouldReceive('readStream')->once()->with($path)->andReturn($stream);
     Storage::shouldReceive('disk')->once()->with('backups')->andReturn($filesystem);
 }
@@ -128,102 +131,88 @@ if ($response->getStatusCode() !== 200) {
     throw new RuntimeException('The subprocess download route did not return a successful streamed response.');
 }
 
-// These are genuine PHP buffers, without a test callback that silently drains
-// them. Removing them must neither retain the backup nor leak earlier output.
-if (in_array($mode, ['buffered', 'nested'], true)) {
-    ob_start();
-    echo 'accidental output before the backup';
+$transportBytes = 0;
+$deliveredBytes = 0;
+$deliveredHash = hash_init('sha256');
+$deliver = function (string $chunk) use (&$deliveredBytes, $deliveredHash): string {
+    $deliveredBytes += strlen($chunk);
+    hash_update($deliveredHash, $chunk);
+    fwrite(STDOUT, $chunk);
+
+    return '';
+};
+$observerLevel = null;
+$observerName = null;
+
+if ($reportFile !== false) {
+    // This transport observes only bytes that have reached the bottom. It
+    // cannot drain a test buffer above it or hide a pending shutdown tail.
+    ob_start($deliver, 1);
+    $observerLevel = ob_get_level() - 1;
+    $observerName = ob_get_status()['name'];
 }
 
-if ($mode === 'nested') {
-    ob_start();
-    echo 'more accidental output';
+// Every stack is described bottom-to-top; ordinary modes retain their real
+// PHP buffers, while custom handlers model passthrough and HTTP transports.
+$encodedBuffers = getenv('BACKUP_DOWNLOAD_BUFFERS');
+$buffers = $encodedBuffers !== false ? json_decode($encodedBuffers, true, 512, JSON_THROW_ON_ERROR) : [];
+
+if (! is_array($buffers)) {
+    throw new RuntimeException('Expected an output buffer descriptor list.');
 }
 
-if ($mode === 'bounded') {
-    ob_start(null, 8192);
-}
+foreach ($buffers as $buffer) {
+    if (! is_array($buffer)
+        || ! in_array($buffer['handler'] ?? null, ['ordinary', 'passthrough', 'transport'], true)
+        || ! is_int($buffer['chunk_size'] ?? null)
+        || ! is_int($buffer['flags'] ?? null)
+        || ! is_string($buffer['pending'] ?? '')) {
+        throw new RuntimeException('Invalid output buffer descriptor.');
+    }
 
-if ($mode === 'nonflushable') {
-    ob_start(null, 0, PHP_OUTPUT_HANDLER_CLEANABLE | PHP_OUTPUT_HANDLER_REMOVABLE);
-}
-
-if (in_array($mode, ['ordinary-cleanable', 'ordinary-removable', 'ordinary-dirty-protected'], true)) {
-    $flags = match ($mode) {
-        'ordinary-cleanable' => PHP_OUTPUT_HANDLER_CLEANABLE | PHP_OUTPUT_HANDLER_FLUSHABLE,
-        'ordinary-removable' => PHP_OUTPUT_HANDLER_REMOVABLE,
-        default => PHP_OUTPUT_HANDLER_FLUSHABLE,
-    };
-    ob_start(null, 0, $flags);
-    echo 'accidental output before the backup';
-}
-
-if ($mode === 'ordinary-dirty-hidden') {
-    ob_start(null, 8192);
-    echo 'accidental output before the backup';
-    ob_start(fn (string $chunk): string => $chunk, 1);
-}
-
-if ($mode === 'transport-dirty') {
-    ob_start(function (string $chunk, int $phase): string {
+    $transport = function (string $chunk, int $phase) use (&$transportBytes, $deliver): string {
         if (($phase & PHP_OUTPUT_HANDLER_CLEAN) !== 0) {
             fwrite(STDERR, "transport handler must not be cleaned\n");
         }
 
-        fwrite(STDOUT, $chunk);
-
-        return '';
-    }, 8192);
-    echo 'accidental output before the backup';
-}
-
-$transportBytes = 0;
-$transportModes = ['transport', 'transport-nested', 'transport-unbounded', 'transport-protected-flushable', 'transport-protected-bounded'];
-
-if ($mode === 'protected-hidden') {
-    ob_start();
-    ob_start(fn (string $chunk): string => $chunk, 1);
-}
-
-if (in_array($mode, $transportModes, true)) {
-    // Like Octane/Swoole, the handler sends the response through its own
-    // transport. Merely echoing after removing it must not pass this test.
-    $transport = function (string $chunk) use (&$transportBytes): string {
         $transportBytes += strlen($chunk);
-        fwrite(STDOUT, $chunk);
 
-        return '';
+        return $deliver($chunk);
     };
-    $chunkSize = in_array($mode, ['transport-unbounded', 'transport-protected-flushable'], true) ? 0 : 1;
-    $flags = match ($mode) {
-        'transport-protected-flushable' => PHP_OUTPUT_HANDLER_CLEANABLE | PHP_OUTPUT_HANDLER_FLUSHABLE,
-        'transport-protected-bounded' => 0,
-        default => PHP_OUTPUT_HANDLER_STDFLAGS,
+    $handler = match ($buffer['handler']) {
+        'ordinary' => null,
+        'passthrough' => fn (string $chunk): string => $chunk,
+        'transport' => $transport,
     };
-    ob_start($transport, $chunkSize, $flags);
-
-    if ($mode === 'transport-nested') {
-        ob_start();
-        echo 'accidental output above the transport';
-    }
+    ob_start($handler, $buffer['chunk_size'], $buffer['flags']);
+    echo $buffer['pending'] ?? '';
 }
 
-if (in_array($mode, ['protected', 'protected-nested'], true)) {
-    ob_start(null, 0, 0);
-
-    if ($mode === 'protected-nested') {
-        ob_start();
-    }
-}
+$error = null;
 
 try {
     $response->sendContent();
 } catch (StreamedResponseException $exception) {
-    fwrite(STDERR, $exception->getMessage() . "\n");
+    $error = $exception->getMessage();
+    fwrite(STDERR, $error . "\n");
     fwrite(STDERR, is_resource($stream) ? "stream remains open\n" : "stream closed\n");
 }
 
-if (in_array($mode, $transportModes, true)) {
+if ($reportFile !== false) {
+    // The contract is complete delivery when sendContent returns, without
+    // depending on shutdown to flush bytes from a persistent HTTP transport.
+    $remainingBuffers = ob_get_status(true);
+    file_put_contents($reportFile, json_encode([
+        'bytes' => $deliveredBytes,
+        'sha256' => hash_final(hash_copy($deliveredHash)),
+        'pending' => array_sum(array_column($remainingBuffers, 'buffer_used')),
+        'observer_present' => (ob_list_handlers()[$observerLevel] ?? null) === $observerName,
+        'stream_closed' => get_resource_type($stream) === 'Unknown',
+        'error' => $error,
+    ], JSON_THROW_ON_ERROR));
+}
+
+if (in_array($mode, ['transport', 'transport-nested', 'transport-unbounded', 'transport-protected-flushable', 'transport-protected-bounded'], true)) {
     fwrite(STDERR, 'transport bytes: ' . $transportBytes . "\n");
 }
 

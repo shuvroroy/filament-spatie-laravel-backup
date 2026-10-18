@@ -434,6 +434,8 @@ The Download action opens a signed URL in a new tab and streams the archive in 1
 
 Before streaming, the download discards pending ordinary PHP output and removes ordinary buffers where possible. It preserves transport handlers and flushes each chunk. If pending output cannot be discarded safely or a remaining buffer cannot drain safely, the download fails before sending archive bytes.
 
+The complete archive must reach the transport before the streaming callback returns, without relying on PHP shutdown to flush final bytes. Retained lower buffers must drain on every write (`chunk_size=1`); the top buffer can instead be explicitly flushable. Buffers that could retain a final fragment are rejected, including nested buffers beneath a flushable handler.
+
 The download route uses the panel's authentication, tenant, and page middleware. Each request also checks access to the backups page and the `download-backup` permission. A signed link does not grant access by itself. If routes are cached, rebuild the route cache after updating the package.
 
 PHP, web server, and proxy timeouts still apply to downloads. The plugin's `timeout()` and `noTimeout()` settings configure backup creation jobs, not file transfers.
