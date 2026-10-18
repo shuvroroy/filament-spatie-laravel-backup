@@ -8,7 +8,9 @@ use Filament\Clusters\Cluster;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Filament\Support\Concerns\EvaluatesClosures;
+use Illuminate\Support\Facades\Route;
 use LogicException;
+use ShuvroRoy\FilamentSpatieLaravelBackup\Http\Controllers\DownloadBackupController;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups;
 use UnexpectedValueException;
 
@@ -59,6 +61,16 @@ class FilamentSpatieLaravelBackupPlugin implements Plugin
         } finally {
             static::$registeringPlugin = null;
         }
+
+        $page = $this->getPage();
+
+        $panel->authenticatedTenantRoutes(static function (Panel $panel) use ($page): void {
+            Route::get('filament-spatie-backup/download', DownloadBackupController::class)
+                ->middleware($page::getRouteMiddleware($panel))
+                ->withoutMiddleware($page::getWithoutRouteMiddleware($panel))
+                ->middleware('signed')
+                ->name('filament-spatie-backup.download');
+        });
     }
 
     public function boot(Panel $panel): void

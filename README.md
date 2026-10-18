@@ -428,6 +428,18 @@ FilamentSpatieLaravelBackupPlugin::make()
 
 Set `cacheDuration(0)` to disable metadata caching, or `backupLimit(null)` to make every backup available to the paginated table.
 
+### Downloading large backups
+
+The Download action opens a signed URL in a new tab and streams the archive in 1 MiB chunks through Laravel's filesystem. It uses a separate HTTP request so Livewire does not buffer and Base64-encode the complete file. This works with the [local and remote backup disks supported by Spatie](https://spatie.be/docs/laravel-backup/v10/taking-backups/overview).
+
+Before streaming, the download discards pending ordinary PHP output and removes ordinary buffers where possible. It preserves transport handlers and flushes each chunk. If pending output cannot be discarded safely or a remaining buffer cannot drain safely, the download fails before sending archive bytes.
+
+The complete archive must reach the transport before the streaming callback returns, without relying on PHP shutdown to flush final bytes. Retained lower buffers must drain on every write (`chunk_size=1`); the top buffer can instead be explicitly flushable. Buffers that could retain a final fragment are rejected, including nested buffers beneath a flushable handler.
+
+The download route uses the panel's authentication, tenant, and page middleware. Each request also checks access to the backups page and the `download-backup` permission. A signed link does not grant access by itself. If routes are cached, rebuild the route cache after updating the package.
+
+PHP, web server, and proxy timeouts still apply to downloads. The plugin's `timeout()` and `noTimeout()` settings configure backup creation jobs, not file transfers.
+
 ### Backup type API
 
 Manual backup creation, filename detection, and table filtering use the same enum values:

@@ -3,13 +3,20 @@
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Panel;
+use Filament\Support\Facades\FilamentView;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationListRecords;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationStatusListRecords;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackup;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+
+use function PHPUnit\Framework\assertStringContainsString;
+use function PHPUnit\Framework\assertStringNotContainsString;
 
 beforeEach(function () {
     config()->set('app.timezone', 'UTC');
@@ -30,6 +37,14 @@ beforeEach(function () {
 
     Filament::registerPanel($panel);
     Filament::setCurrentPanel($panel);
+
+    Route::name($panel->generateRouteName(''))->group(function () use ($panel): void {
+        foreach ($panel->getAuthenticatedTenantRoutes() as $routes) {
+            $routes($panel);
+        }
+    });
+
+    Route::getRoutes()->refreshNameLookups();
 });
 
 it('renders and configures both backup record components', function () {
@@ -67,7 +82,7 @@ it('renders and configures both backup record components', function () {
         );
 });
 
-it('downloads and deletes a backup through its table actions', function () {
+it('links to a signed download outside Livewire and deletes a backup through its table action', function () {
     $path = 'test-app/2026-08-24-00-00-00.zip';
     Storage::disk('backups')->put($path, 'backup');
 
@@ -76,16 +91,60 @@ it('downloads and deletes a backup through its table actions', function () {
     $download = backupRecordAction($table, 'download');
     $delete = backupRecordAction($table, 'delete');
     $record = FilamentSpatieLaravelBackup::getBackupDestinationData('backups', cacheDuration: 60)[0];
+    $record['__key'] = $record['key'];
+    $download->record($record);
+    $url = $download->getUrl();
+
+    if ($url === null) {
+        throw new LogicException('The backup download action has no URL.');
+    }
+
+    $request = Request::create($url);
 
     expect($download->isVisible())->toBeFalse()
         ->and($delete->isVisible())->toBeFalse()
-        ->and(runBackupRecordAction($download, $record))->not->toBeNull();
+        ->and($download->getActionFunction())->toBeNull()
+        ->and($download->shouldOpenUrlInNewTab())->toBeTrue()
+        ->and(URL::hasValidSignature($request))->toBeTrue()
+        ->and($request->query('disk'))->toBe('backups')
+        ->and($request->query('path'))->toBe($path);
 
     runBackupRecordAction($delete, $record);
 
     expect(Storage::disk('backups')->exists($path))->toBeFalse()
         ->and(FilamentSpatieLaravelBackup::getBackupDestinationData('backups', cacheDuration: 60))
         ->toBeEmpty();
+});
+
+it('renders download links without Livewire navigation even in SPA mode', function () {
+    FilamentView::spa();
+
+    $component = app(BackupDestinationListRecords::class);
+    $download = backupRecordAction($component->table(Table::make($component)), 'download');
+    $download->visible(true)->record([
+        '__key' => 'backup',
+        'disk' => 'backups',
+        'path' => 'test-app/backup.zip',
+    ]);
+
+    $html = $download->toHtml();
+
+    assertStringContainsString('target="_blank"', $html);
+    assertStringNotContainsString('wire:navigate', $html);
+    assertStringNotContainsString('wire:click', $html);
+});
+
+it('requires a panel when generating a download URL', function () {
+    $component = app(BackupDestinationListRecords::class);
+    $download = backupRecordAction($component->table(Table::make($component)), 'download');
+    $download->record(['disk' => 'backups', 'path' => 'test-app/backup.zip']);
+
+    Filament::shouldReceive('getCurrentOrDefaultPanel')->once()->andReturnNull();
+
+    expect(fn () => $download->getUrl())->toThrow(
+        LogicException::class,
+        'A Filament panel is required to download a backup.',
+    );
 });
 
 it('throws when a table action cannot delete a backup', function () {
