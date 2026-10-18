@@ -5,6 +5,7 @@ namespace ShuvroRoy\FilamentSpatieLaravelBackup\Components;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Facades\Filament;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
@@ -18,13 +19,14 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
+use LogicException;
 use RuntimeException;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackup;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BackupDestinationListRecords extends Component implements HasActions, HasForms, HasTable
 {
@@ -156,8 +158,9 @@ class BackupDestinationListRecords extends Component implements HasActions, HasF
                 Action::make('download')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.download'))
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->visible(auth()->user()?->can('download-backup') ?? false)
-                    ->action($this->downloadBackup(...)),
+                    ->visible(Filament::auth()->user()?->can('download-backup') ?? false)
+                    ->url($this->downloadBackup(...))
+                    ->openUrlInNewTab(),
 
                 Action::make('delete')
                     ->label(__('filament-spatie-backup::backup.components.backup_destination_list.table.actions.delete'))
@@ -171,9 +174,22 @@ class BackupDestinationListRecords extends Component implements HasActions, HasF
     }
 
     /** @param array{disk: string, path: string, ...} $record */
-    protected function downloadBackup(array $record): StreamedResponse
+    protected function downloadBackup(array $record): string
     {
-        return Storage::disk($record['disk'])->download($record['path']);
+        $panel = Filament::getCurrentOrDefaultPanel();
+
+        if ($panel === null) {
+            throw new LogicException('A Filament panel is required to download a backup.');
+        }
+
+        return URL::signedRoute(
+            $panel->generateRouteName('filament-spatie-backup.download'),
+            [
+                'disk' => $record['disk'],
+                'path' => $record['path'],
+                ...($panel->hasTenancy() ? ['tenant' => Filament::getTenant()] : []),
+            ],
+        );
     }
 
     /** @param array{disk: string, path: string, ...} $record */
