@@ -16,9 +16,12 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use PHPUnit\Runner\CodeCoverage;
+use SebastianBergmann\CodeCoverage\Data\RawCodeCoverageData;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Components\BackupDestinationListRecords;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups;
+use Symfony\Component\Process\Process;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
@@ -79,38 +82,6 @@ class DenyBackupDownloadMiddleware
     }
 }
 
-class UnreadableBackupStream
-{
-    /** @var resource | null */
-    public $context;
-
-    public static bool $closed = false;
-
-    public static bool $emptyRead = false;
-
-    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
-    {
-        static::$closed = false;
-
-        return true;
-    }
-
-    public function stream_eof(): bool
-    {
-        return false;
-    }
-
-    public function stream_read(int $count): string | false
-    {
-        return static::$emptyRead ? '' : false;
-    }
-
-    public function stream_close(): void
-    {
-        static::$closed = true;
-    }
-}
-
 beforeEach(function () {
     config()->set('app.key', 'base64:' . base64_encode(str_repeat('a', 32)));
     config()->set('backup.backup.name', 'test-app');
@@ -130,11 +101,16 @@ it('streams backup contents through an authenticated HTTP download', function ()
     get(backupDownloadUrl())
         ->assertOk()
         ->assertDownload('backup.zip')
-        ->assertHeader('Content-Length', '15')
-        ->assertStreamedContent('backup contents');
+        ->assertHeader('Content-Length', '15');
+
+    $result = streamBackupDownloadInSubprocess();
+
+    expect($result['bytes'])->toBe(15)
+        ->and($result['sha256'])->toBe(hash('sha256', 'backup contents'))
+        ->and($result['stderr'])->toBe('');
 });
 
-it('streams a large backup without buffering the entire file in memory', function () {
+it('streams a backup larger than the PHP memory limit through output buffers', function (string $mode) {
     registerBackupDownloadPanel();
     actingAs(new DownloadBackupUser);
     $size = 128 * 1024 * 1024;
@@ -151,31 +127,24 @@ it('streams a large backup without buffering the entire file in memory', functio
         fclose($file);
     }
 
-    memory_reset_peak_usage();
-    $initialMemory = memory_get_usage(true);
-    $response = get(backupDownloadUrl(['path' => $path]))
+    get(backupDownloadUrl(['path' => $path]))
         ->assertOk()
         ->assertDownload('large-backup.zip')
         ->assertHeader('Content-Length', (string) $size);
-    $bytes = 0;
+    $result = streamBackupDownloadInSubprocess($mode, $path);
 
-    // Discard bounded chunks to simulate the HTTP client without having the
-    // test response's streamedContent() helper buffer the complete download.
-    ob_start(function (string $chunk) use (&$bytes): string {
-        $bytes += strlen($chunk);
+    expect($result['bytes'])->toBe($size)
+        ->and($result['sha256'])->toBe(hash_file('sha256', Storage::disk('backups')->path($path)))
+        ->and($result['stderr'])->toBe('');
+})->with(['plain', 'buffered', 'nested', 'bounded', 'nonflushable']);
 
-        return '';
-    }, 8192);
+it('preserves output handlers that provide the response transport', function (string $mode) {
+    $result = streamBackupDownloadInSubprocess($mode);
 
-    try {
-        $response->baseResponse->sendContent();
-    } finally {
-        ob_end_clean();
-    }
-
-    expect($bytes)->toBe($size)
-        ->and(memory_get_peak_usage(true) - $initialMemory)->toBeLessThan(32 * 1024 * 1024);
-});
+    expect($result['bytes'])->toBe(15)
+        ->and($result['sha256'])->toBe(hash('sha256', 'backup contents'))
+        ->and($result['stderr'])->toBe("transport bytes: 15\n");
+})->with(['transport', 'transport-nested', 'transport-unbounded', 'transport-protected-flushable', 'transport-protected-bounded']);
 
 it('requires a logged in panel user', function () {
     registerBackupDownloadPanel();
@@ -201,40 +170,19 @@ it('reports a backup stream that cannot be opened', function () {
     );
 });
 
-it('closes the backup stream when reading fails or stalls', function (bool $emptyRead) {
-    registerBackupDownloadPanel();
-    actingAs(new DownloadBackupUser);
-    UnreadableBackupStream::$emptyRead = $emptyRead;
-    expect(stream_wrapper_register('unreadable-backup', UnreadableBackupStream::class))->toBeTrue();
+it('closes the backup stream when reading fails or stalls', function (string $mode) {
+    $result = streamBackupDownloadInSubprocess($mode);
 
-    try {
-        $stream = fopen('unreadable-backup://backup.zip', 'rb');
+    expect($result['bytes'])->toBe(0)
+        ->and($result['stderr'])->toBe("The backup could not be read for download.\nstream closed\n");
+})->with(['failed-read', 'stalled-read']);
 
-        if ($stream === false) {
-            throw new RuntimeException('Could not open the failing stream fixture.');
-        }
+it('rejects protected output buffers without leaking backup bytes or leaving streams open', function (string $mode) {
+    $result = streamBackupDownloadInSubprocess($mode);
 
-        $filesystem = Mockery::mock(FilesystemAdapter::class);
-        $filesystem->shouldReceive('exists')->once()->with('test-app/backup.zip')->andReturnTrue();
-        $filesystem->shouldReceive('mimeType')->once()->with('test-app/backup.zip')->andReturn('application/zip');
-        $filesystem->shouldReceive('size')->once()->with('test-app/backup.zip')->andReturn(15);
-        $filesystem->shouldReceive('readStream')->once()->with('test-app/backup.zip')->andReturn($stream);
-        Storage::shouldReceive('disk')->once()->with('backups')->andReturn($filesystem);
-
-        $response = get(backupDownloadUrl())->assertOk();
-
-        expect(fn () => $response->baseResponse->sendContent())->toThrow(
-            StreamedResponseException::class,
-            'The backup could not be read for download.',
-        );
-
-        expect(UnreadableBackupStream::$closed)->toBeTrue()
-            ->and(is_resource($stream))->toBeFalse();
-    } finally {
-        stream_wrapper_unregister('unreadable-backup');
-        UnreadableBackupStream::$emptyRead = false;
-    }
-})->with(['failed read' => false, 'stalled read' => true]);
+    expect($result['bytes'])->toBe(0)
+        ->and($result['stderr'])->toBe("The backup cannot be streamed while a protected output buffer is active.\nstream closed\n");
+})->with(['protected', 'protected-nested', 'protected-hidden']);
 
 it('requires download permission when requesting the file directly', function () {
     registerBackupDownloadPanel();
@@ -351,8 +299,13 @@ it('supports custom backup filenames and nested directories', function () {
 
     get(backupDownloadUrl(['path' => $path]))
         ->assertOk()
-        ->assertDownload('My custom backup.zip')
-        ->assertStreamedContent('custom backup');
+        ->assertDownload('My custom backup.zip');
+
+    $result = streamBackupDownloadInSubprocess('nested', $path);
+
+    expect($result['bytes'])->toBe(13)
+        ->and($result['sha256'])->toBe(hash('sha256', 'custom backup'))
+        ->and($result['stderr'])->toBe('');
 });
 
 it('uses the current panel authentication guard to authorize downloads', function () {
@@ -364,7 +317,7 @@ it('uses the current panel authentication guard to authorize downloads', functio
     actingAs(new DownloadBackupUser, 'backup-admin');
     auth()->shouldUse('web');
 
-    get(backupDownloadUrl())->assertOk()->assertStreamedContent('backup contents');
+    get(backupDownloadUrl())->assertOk()->assertDownload('backup.zip');
 });
 
 it('creates signed download links with the current tenant and runs tenant authorization', function () {
@@ -386,7 +339,7 @@ it('creates signed download links with the current tenant and runs tenant author
 
     expect($url)->toContain('/admin/42/filament-spatie-backup/download');
 
-    get($url)->assertOk()->assertStreamedContent('backup contents');
+    get($url)->assertOk()->assertDownload('backup.zip');
 
     $user->mayAccessTenant = false;
 
@@ -429,4 +382,56 @@ function backupDownloadUrl(array $parameters = []): string
         'path' => 'test-app/backup.zip',
         ...$parameters,
     ]);
+}
+
+/** @return array{bytes: int, sha256: string, stderr: string} */
+function streamBackupDownloadInSubprocess(string $mode = 'plain', string $path = 'test-app/backup.zip'): array
+{
+    // A real streaming response closes output buffers, including PHPUnit's
+    // capture. Execute it separately and drain stdout without retaining it.
+    $iniFile = php_ini_loaded_file();
+    $process = new Process([
+        PHP_BINARY,
+        ...($iniFile !== false ? ['-c', $iniFile] : []),
+        '-d', 'memory_limit=96M',
+        __DIR__ . '/Fixtures/stream-backup.php',
+        $mode,
+        Storage::disk('backups')->path(''),
+        $path,
+        config()->string('backup.backup.name'),
+    ]);
+    $process->setTimeout(30);
+    $bytes = 0;
+    $hash = hash_init('sha256');
+    $coverageFile = CodeCoverage::instance()->isActive() ? tempnam(sys_get_temp_dir(), 'backup-coverage-') : false;
+    $process->setEnv(['BACKUP_DOWNLOAD_COVERAGE' => $coverageFile, 'XDEBUG_MODE' => 'coverage']);
+
+    try {
+        $process->run(function (string $type, string $chunk) use ($process, &$bytes, $hash): void {
+            if ($type === Process::OUT) {
+                $bytes += strlen($chunk);
+                hash_update($hash, $chunk);
+                $process->clearOutput();
+            }
+        });
+
+        expect($process->getExitCode())->toBe(0, $process->getErrorOutput());
+
+        if ($coverageFile !== false) {
+            $data = file_get_contents($coverageFile);
+            $coverage = $data !== false ? unserialize($data, ['allowed_classes' => [RawCodeCoverageData::class]]) : null;
+
+            if (! $coverage instanceof RawCodeCoverageData) {
+                throw new RuntimeException('The download subprocess did not return coverage data.');
+            }
+
+            CodeCoverage::instance()->codeCoverage()->append($coverage);
+        }
+    } finally {
+        if ($coverageFile !== false) {
+            unlink($coverageFile);
+        }
+    }
+
+    return ['bytes' => $bytes, 'sha256' => hash_final($hash), 'stderr' => $process->getErrorOutput()];
 }

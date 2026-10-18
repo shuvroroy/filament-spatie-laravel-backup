@@ -68,6 +68,8 @@ final class DownloadBackupController
             }
 
             try {
+                $flushOutputBuffer = $this->prepareOutputBuffers();
+
                 while (! feof($stream)) {
                     $chunk = fread($stream, 1024 * 1024);
 
@@ -76,6 +78,12 @@ final class DownloadBackupController
                     }
 
                     echo $chunk;
+
+                    if ($flushOutputBuffer) {
+                        ob_flush();
+                    }
+
+                    flush();
                 }
             } finally {
                 fclose($stream);
@@ -84,5 +92,39 @@ final class DownloadBackupController
             'Content-Type' => $filesystem->mimeType($path) ?: 'application/octet-stream',
             'Content-Length' => (string) $filesystem->size($path),
         ]);
+    }
+
+    private function prepareOutputBuffers(): bool
+    {
+        // Discard ordinary buffers, but preserve handlers used by HTTP transports.
+        $removableFlags = PHP_OUTPUT_HANDLER_REMOVABLE | PHP_OUTPUT_HANDLER_CLEANABLE;
+        /** @var list<array{name: string, flags: int, chunk_size: int}> $buffers */
+        $buffers = ob_get_status(true);
+
+        while ($buffers !== []) {
+            $buffer = $buffers[array_key_last($buffers)];
+
+            if ($buffer['name'] !== 'default output handler'
+                || ($buffer['flags'] & $removableFlags) !== $removableFlags) {
+                break;
+            }
+
+            ob_end_clean();
+            array_pop($buffers);
+        }
+
+        $topLevel = array_key_last($buffers);
+
+        // Only the top buffer can be flushed explicitly. Lower buffers must
+        // drain automatically, or they could accumulate the whole archive.
+        foreach ($buffers as $level => $buffer) {
+            if ($buffer['chunk_size'] === 0
+                && ($level !== $topLevel || ($buffer['flags'] & PHP_OUTPUT_HANDLER_FLUSHABLE) === 0)) {
+                throw new RuntimeException('The backup cannot be streamed while a protected output buffer is active.');
+            }
+        }
+
+        return $topLevel !== null
+            && ($buffers[$topLevel]['flags'] & PHP_OUTPUT_HANDLER_FLUSHABLE) !== 0;
     }
 }
