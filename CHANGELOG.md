@@ -2,6 +2,22 @@
 
 All notable changes to `filament-spatie-laravel-backup` will be documented in this file.
 
+## v4.1.0 - 2026-10-18
+
+### What's Changed
+
+* chore(deps-dev): bump cssnano from 8.0.7 to 8.0.8 by @dependabot[bot] in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/133
+* chore(deps-dev): bump cssnano from 8.0.8 to 9.0.1 by @dependabot[bot] in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/134
+* chore(deps-dev): bump cssnano from 9.0.1 to 9.0.3 by @dependabot[bot] in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/135
+* chore(deps-dev): bump postcss-cli from 11.0.1 to 12.0.0 by @dependabot[bot] in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/136
+* chore(deps-dev): bump cssnano from 9.0.3 to 9.0.4 by @dependabot[bot] in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/138
+* chore(deps-dev): bump cssnano from 9.0.4 to 9.0.5 by @dependabot[bot] in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/139
+* chore(deps-dev): bump postcss-nesting from 14.0.1 to 14.0.2 by @dependabot[bot] in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/141
+* chore(deps-dev): bump cssnano from 9.0.5 to 9.2.2 by @dependabot[bot] in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/142
+* fix: stream large backup downloads outside Livewire by @shuvroroy in https://github.com/shuvroroy/filament-spatie-laravel-backup/pull/144
+
+**Full Changelog**: https://github.com/shuvroroy/filament-spatie-laravel-backup/compare/v4.0.2...v4.1.0
+
 ## v4.0.2 - 2026-08-27
 
 ### What's Changed
