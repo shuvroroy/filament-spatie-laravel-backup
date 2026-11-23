@@ -12,9 +12,9 @@ Then review the following breaking and behavioural changes before deploying v4.0
 
 ### Supported versions
 
-Version 4 supports PHP 8.2–8.5, Laravel 12–13, Filament 4–5, and Spatie Laravel Backup 9–10. Upgrade unsupported framework and runtime versions first. If you have not published Spatie's configuration, publish it now:
+Version 4 supports PHP 8.2–8.6, Laravel 12–13, Filament 4–5, and Spatie Laravel Backup 9–10. On PHP 8.2, use Laravel 12 and Spatie Laravel Backup 9. When upgrading to PHP 8.6, use Laravel 13 and allow Composer to update Spatie Laravel Backup to 10.4 or later in the 10.x series.
 
-PHP 8.2 applications must use Laravel 12 and Spatie Laravel Backup 9. Laravel 13 and Spatie Laravel Backup 10 require a newer PHP version.
+If you have not published Spatie's configuration, run the following command.
 
 ```sh
 php artisan vendor:publish --provider="Spatie\Backup\BackupServiceProvider" --tag="backup-config"
