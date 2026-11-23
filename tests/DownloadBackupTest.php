@@ -52,6 +52,7 @@ class DownloadBackupUser extends User implements FilamentUser, HasTenants
     }
 }
 
+/** @property int $id */
 class DownloadBackupTenant extends Model
 {
     public function resolveRouteBinding(mixed $value, mixed $field = null): ?static

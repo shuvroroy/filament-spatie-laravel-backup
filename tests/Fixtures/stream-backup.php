@@ -15,8 +15,10 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use SebastianBergmann\CodeCoverage\CodeCoverage;
-use SebastianBergmann\CodeCoverage\Driver\Selector;
+use SebastianBergmann\CodeCoverage\Driver\PcovDriver;
+use SebastianBergmann\CodeCoverage\Driver\XdebugDriver;
 use SebastianBergmann\CodeCoverage\Filter;
+use SebastianBergmann\Environment\Runtime;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Tests\TestCase;
 
@@ -30,7 +32,8 @@ if ($coverageFile !== false) {
     $filter = new Filter;
     $filter->includeFile(__DIR__ . '/../../src/Http/Controllers/DownloadBackupController.php');
     $filter->includeFile(__DIR__ . '/../../src/Support/BackupDownloadStream.php');
-    $coverage = new CodeCoverage((new Selector)->forLineCoverage($filter), $filter);
+    $driver = (new Runtime)->hasPCOV() ? new PcovDriver($filter) : new XdebugDriver($filter);
+    $coverage = new CodeCoverage($driver, $filter);
     $coverage->start('stream-backup');
 }
 
