@@ -30,9 +30,9 @@ Version 4 supports the following stack:
 | Filament | 4–5 |
 | Spatie Laravel Backup | 9–10 |
 
-PHP 8.2 is supported with Laravel 12 and Spatie Laravel Backup 9. Laravel 13 and Spatie Laravel Backup 10 require a newer PHP version.
+On PHP 8.2, use Laravel 12 and Spatie Laravel Backup 9. On PHP 8.3, the compatible Spatie 10 releases are 10.2.x and 10.3.x. Spatie 10.4 and later in the 10.x series require PHP 8.4 or newer.
 
-Use Laravel 13 for PHP 8.6.
+For PHP 8.6, use Laravel 13 and Spatie Laravel Backup 10.4 or later in the 10.x series. Spatie 10.4 added support for the ZIP extension bundled with PHP 8.6.
 
 See the [Laravel support policy](https://laravel.com/docs/12.x/releases#support-policy), [PHP supported versions](https://www.php.net/supported-versions.php), and [Filament support policy](https://filamentphp.com/docs/5.x/introduction/version-support-policy) for upstream support timelines.
 
