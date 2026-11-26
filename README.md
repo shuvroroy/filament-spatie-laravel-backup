@@ -305,7 +305,7 @@ class Backups extends BaseBackups
 }
 ```
 
-Then register the extended page class in `AdminPanelProvider`:
+Filament skips automatic discovery for backups pages. Register your custom page with `usingPage()` in each panel that should display it.
 
 ```php
 <?php

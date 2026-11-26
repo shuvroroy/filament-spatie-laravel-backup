@@ -16,6 +16,8 @@ use ShuvroRoy\FilamentSpatieLaravelBackup\Jobs\CreateBackupJob;
 
 class Backups extends Page
 {
+    protected static bool $isDiscovered = false;
+
     protected string $view = 'filament-spatie-backup::pages.backups';
 
     public function getHeading(): string | Htmlable
