@@ -8,6 +8,7 @@ use Filament\PanelRegistry;
 use Illuminate\Support\Facades\Route;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups;
+use ShuvroRoy\FilamentSpatieLaravelBackup\Tests\Fixtures\Pages\CustomBackupsPage;
 
 enum TestNavigationIcon: string
 {
@@ -20,8 +21,6 @@ enum TestIntegerNavigationIcon: int
 }
 
 class PluginTestCluster extends Cluster {}
-
-class CustomBackupsPage extends Backups {}
 
 class ConflictingBackupPlugin implements FilamentPlugin
 {
@@ -71,6 +70,22 @@ it('can register its page before a default panel exists', function () {
         ->plugin(FilamentSpatieLaravelBackupPlugin::make());
 
     expect($panel->hasPlugin('filament-spatie-backup'))->toBeTrue();
+});
+
+it('registers a custom backups page in its configured cluster after page discovery', function () {
+    $panel = Panel::make()
+        ->default()
+        ->id('admin')
+        ->discoverPages(
+            in: __DIR__ . '/Fixtures/Pages',
+            for: 'ShuvroRoy\\FilamentSpatieLaravelBackup\\Tests\\Fixtures\\Pages',
+        )
+        ->plugin(FilamentSpatieLaravelBackupPlugin::make()
+            ->usingPage(CustomBackupsPage::class)
+            ->cluster(PluginTestCluster::class));
+
+    expect($panel->getPages())->toContain(CustomBackupsPage::class)
+        ->and($panel->getClusteredComponents(PluginTestCluster::class))->toBe([CustomBackupsPage::class]);
 });
 
 it('resolves cluster configuration from the current panel', function () {
